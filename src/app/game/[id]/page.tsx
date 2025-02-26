@@ -140,20 +140,20 @@ export default function GameDetail() {
 
   return (
     <MainLayout>
-      <div className="container py-8">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="container px-4 py-4 md:py-8">
+        <div className="mb-4 md:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => router.push("/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-3xl font-bold">{game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold">{game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}</h1>
           </div>
           <Button variant="destructive" onClick={() => setShowEndGameDialog(true)}>
             End Game
           </Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
             <Tabs defaultValue="scoreboard">
               <TabsList className="grid w-full grid-cols-3">
@@ -162,7 +162,7 @@ export default function GameDetail() {
                 <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="scoreboard" className="mt-4">
+              <TabsContent value="scoreboard" className="mt-3 md:mt-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Scoreboard</CardTitle>
@@ -171,29 +171,29 @@ export default function GameDetail() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
+                    <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+                      <table className="w-full border-collapse min-w-[400px]">
                         <thead>
                           <tr className="border-b">
-                            <th className="py-2 text-left">Round</th>
+                            <th className="py-2 text-left font-medium">Round</th>
                             {game.players.map((player) => (
-                              <th key={player.id} className="py-2 text-left">
+                              <th key={player.id} className="py-2 text-left font-medium">
                                 {player.name}
                               </th>
                             ))}
-                            <th className="py-2 text-left">Notes</th>
+                            <th className="py-2 text-left font-medium">Notes</th>
                           </tr>
                         </thead>
                         <tbody>
                           {game.rounds.map((round) => (
                             <tr key={round.roundNumber} className="border-b">
-                              <td className="py-2">{round.roundNumber}</td>
+                              <td className="py-2 pr-4">{round.roundNumber}</td>
                               {game.players.map((player) => {
                                 const score = round.playerScores.find(
                                   (s) => s.playerId === player.id
                                 );
                                 return (
-                                  <td key={player.id} className="py-2">
+                                  <td key={player.id} className="py-2 pr-4">
                                     {score ? score.score : 0}
                                   </td>
                                 );
@@ -204,9 +204,9 @@ export default function GameDetail() {
                             </tr>
                           ))}
                           <tr className="font-bold">
-                            <td className="py-2">Total</td>
+                            <td className="py-2 pr-4">Total</td>
                             {game.players.map((player) => (
-                              <td key={player.id} className="py-2">
+                              <td key={player.id} className="py-2 pr-4">
                                 {totalScores[player.id]}
                               </td>
                             ))}
@@ -219,7 +219,7 @@ export default function GameDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="add-round" className="mt-4">
+              <TabsContent value="add-round" className="mt-3 md:mt-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
@@ -229,8 +229,8 @@ export default function GameDetail() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {game.players.map((player) => (
-                      <div key={player.id} className="flex items-center gap-4">
-                        <Label htmlFor={`score-${player.id}`} className="w-24">
+                      <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <Label htmlFor={`score-${player.id}`} className="w-full sm:w-24">
                           {player.name}
                         </Label>
                         <Input
@@ -240,6 +240,7 @@ export default function GameDetail() {
                           onChange={(e) =>
                             handleScoreChange(player.id, e.target.value)
                           }
+                          className="flex-1"
                         />
                       </div>
                     ))}
@@ -264,7 +265,7 @@ export default function GameDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="notes" className="mt-4">
+              <TabsContent value="notes" className="mt-3 md:mt-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Game Notes</CardTitle>
@@ -275,15 +276,17 @@ export default function GameDetail() {
                   <CardContent className="space-y-4">
                     <div>
                       <Label htmlFor="game-note">New Note</Label>
-                      <div className="mt-1 flex gap-2">
+                      <div className="mt-1 flex flex-col sm:flex-row gap-2">
                         <Input
                           id="game-note"
                           value={gameNote}
                           onChange={(e) => setGameNote(e.target.value)}
                           placeholder="Add a game note"
+                          className="flex-1"
                         />
-                        <Button onClick={handleAddGameNote}>
-                          <Plus className="h-4 w-4" />
+                        <Button onClick={handleAddGameNote} className="w-full sm:w-auto">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Note
                         </Button>
                       </div>
                     </div>
@@ -291,11 +294,11 @@ export default function GameDetail() {
                     {game.notes.length > 0 ? (
                       <div className="space-y-2">
                         <h3 className="font-medium">Existing Notes</h3>
-                        <ul className="space-y-1">
+                        <ul className="space-y-2">
                           {game.notes.map((note, index) => (
                             <li
                               key={index}
-                              className="rounded-md border p-2 text-sm"
+                              className="rounded-md border p-3 text-sm"
                             >
                               {note}
                             </li>
@@ -313,7 +316,7 @@ export default function GameDetail() {
             </Tabs>
           </div>
 
-          <div>
+          <div className="mt-4 md:mt-0">
             <Card>
               <CardHeader>
                 <CardTitle>Game Summary</CardTitle>
