@@ -34,7 +34,7 @@ A digital scorekeeper for card games like Hearts and President. This application
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/card-score-keeper.git
+   git clone https://github.com/mandozza/card-score-keeper.git
    cd card-score-keeper
    ```
 
@@ -67,4 +67,8 @@ A digital scorekeeper for card games like Hearts and President. This application
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Repository
+
+The source code is available on GitHub at [https://github.com/mandozza/card-score-keeper](https://github.com/mandozza/card-score-keeper).
