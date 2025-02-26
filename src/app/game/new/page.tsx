@@ -112,7 +112,7 @@ export default function NewGame() {
               />
               <p className="text-sm text-muted-foreground">
                 {gameType === "hearts"
-                  ? "Game ends when a player reaches this score"
+                  ? "Game ends when a player reaches this score (lowest score wins)"
                   : "Game ends when a player reaches this score or after a set number of rounds"}
               </p>
             </div>

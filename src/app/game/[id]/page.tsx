@@ -42,6 +42,31 @@ export default function GameDetail() {
     setNewRound(initialRound);
   }, [currentGame, params.id, router]);
 
+  // Determine the default winner based on game type
+  const getDefaultWinner = () => {
+    if (!game || game.players.length === 0) return null;
+
+    const totals = calculateTotalScores();
+
+    if (game.gameType === "hearts") {
+      // For Hearts, lowest score wins
+      return game.players.reduce((leader, player) =>
+        totals[player.id] < totals[leader.id] ? player : leader
+      , game.players[0]).id;
+    } else {
+      // For other games, highest score wins
+      return game.players.reduce((leader, player) =>
+        totals[player.id] > totals[leader.id] ? player : leader
+      , game.players[0]).id;
+    }
+  };
+
+  // Update to set the default winner when opening the dialog
+  const handleOpenEndGameDialog = () => {
+    setWinner(getDefaultWinner());
+    setShowEndGameDialog(true);
+  };
+
   if (!game) {
     return (
       <MainLayout>
@@ -148,7 +173,7 @@ export default function GameDetail() {
             </Button>
             <h1 className="text-2xl md:text-3xl font-bold">{game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}</h1>
           </div>
-          <Button variant="destructive" onClick={() => setShowEndGameDialog(true)}>
+          <Button variant="destructive" onClick={handleOpenEndGameDialog}>
             End Game
           </Button>
         </div>
@@ -168,6 +193,7 @@ export default function GameDetail() {
                     <CardTitle>Scoreboard</CardTitle>
                     <CardDescription>
                       Game ends at {game.endScore} points
+                      {game.gameType === "hearts" && " (lowest score wins)"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -326,6 +352,7 @@ export default function GameDetail() {
                   <h3 className="font-medium">Game Type</h3>
                   <p className="text-sm text-muted-foreground">
                     {game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}
+                    {game.gameType === "hearts" && " (lowest score wins)"}
                   </p>
                 </div>
 
@@ -356,9 +383,17 @@ export default function GameDetail() {
                       <span>
                         {
                           game.players.reduce((leader, player) => {
-                            return totalScores[player.id] > totalScores[leader.id]
-                              ? player
-                              : leader;
+                            // For Hearts, lowest score wins
+                            if (game.gameType === "hearts") {
+                              return totalScores[player.id] < totalScores[leader.id]
+                                ? player
+                                : leader;
+                            } else {
+                              // For other games, highest score wins
+                              return totalScores[player.id] > totalScores[leader.id]
+                                ? player
+                                : leader;
+                            }
                           }, game.players[0]).name
                         }
                       </span>
@@ -391,11 +426,22 @@ export default function GameDetail() {
               onChange={(e) => setWinner(e.target.value || null)}
             >
               <option value="">No winner</option>
-              {game.players.map((player) => (
-                <option key={player.id} value={player.id}>
-                  {player.name} ({totalScores[player.id]} pts)
-                </option>
-              ))}
+              {game.players
+                .slice()
+                .sort((a, b) => {
+                  // For Hearts, sort by lowest score first
+                  if (game.gameType === "hearts") {
+                    return totalScores[a.id] - totalScores[b.id];
+                  } else {
+                    // For other games, sort by highest score first
+                    return totalScores[b.id] - totalScores[a.id];
+                  }
+                })
+                .map((player) => (
+                  <option key={player.id} value={player.id}>
+                    {player.name} ({totalScores[player.id]} pts)
+                  </option>
+                ))}
             </select>
           </div>
 
