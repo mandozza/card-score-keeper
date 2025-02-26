@@ -76,93 +76,91 @@ export default function NewGame() {
 
   return (
     <MainLayout>
-      <div className="container py-8">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="mb-6 text-3xl font-bold">Start New Game</h1>
+      <div className="px-4 sm:px-6 py-6 sm:py-8 w-full max-w-2xl mx-auto">
+        <h1 className="mb-6 text-2xl sm:text-3xl font-bold">Start New Game</h1>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Game Settings</CardTitle>
-              <CardDescription>Configure your game settings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="game-type">Game Type</Label>
-                <Select value={gameType} onValueChange={setGameType}>
-                  <SelectTrigger id="game-type">
-                    <SelectValue placeholder="Select game type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hearts">Hearts</SelectItem>
-                    <SelectItem value="president">President</SelectItem>
-                    <SelectItem value="spades">Spades</SelectItem>
-                    <SelectItem value="rummy">Rummy</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+        <Card className="shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle>Game Settings</CardTitle>
+            <CardDescription>Configure your game settings</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="game-type">Game Type</Label>
+              <Select value={gameType} onValueChange={setGameType}>
+                <SelectTrigger id="game-type">
+                  <SelectValue placeholder="Select game type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="hearts">Hearts</SelectItem>
+                  <SelectItem value="president">President</SelectItem>
+                  <SelectItem value="spades">Spades</SelectItem>
+                  <SelectItem value="rummy">Rummy</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="end-score">End Score</Label>
+              <Input
+                id="end-score"
+                type="number"
+                value={endScore}
+                onChange={(e) => setEndScore(Number(e.target.value))}
+                min={1}
+              />
+              <p className="text-sm text-muted-foreground">
+                {gameType === "hearts"
+                  ? "Game ends when a player reaches this score"
+                  : "Game ends when a player reaches this score or after a set number of rounds"}
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Players</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddPlayer}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Player
+                </Button>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="end-score">End Score</Label>
-                <Input
-                  id="end-score"
-                  type="number"
-                  value={endScore}
-                  onChange={(e) => setEndScore(Number(e.target.value))}
-                  min={1}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {gameType === "hearts"
-                    ? "Game ends when a player reaches this score"
-                    : "Game ends when a player reaches this score or after a set number of rounds"}
-                </p>
+              <div className="space-y-3">
+                {players.map((player, index) => (
+                  <div key={player.id} className="flex items-center gap-3">
+                    <Input
+                      placeholder={`Player ${index + 1}`}
+                      value={player.name}
+                      onChange={(e) =>
+                        handlePlayerNameChange(player.id, e.target.value)
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemovePlayer(player.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Players</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddPlayer}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Player
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {players.map((player, index) => (
-                    <div key={player.id} className="flex items-center gap-3">
-                      <Input
-                        placeholder={`Player ${index + 1}`}
-                        value={player.name}
-                        onChange={(e) =>
-                          handlePlayerNameChange(player.id, e.target.value)
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemovePlayer(player.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={handleStartGame} className="ml-auto gap-2">
-                Start Game
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleStartGame} className="ml-auto gap-2">
+              Start Game
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </MainLayout>
   );
