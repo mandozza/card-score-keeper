@@ -21,11 +21,11 @@ export default function History() {
 
   return (
     <MainLayout>
-      <div className="container py-8">
-        <h1 className="mb-6 text-3xl font-bold">Game History</h1>
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <h1 className="mb-8 text-3xl font-bold">Game History</h1>
 
         {recentGames.length === 0 ? (
-          <div className="rounded-lg border p-8 text-center">
+          <div className="rounded-lg border p-8 text-center mx-auto max-w-2xl">
             <h2 className="mb-2 text-xl font-semibold">No Game History</h2>
             <p className="mb-4 text-muted-foreground">
               You haven't played any games yet. Start a new game to see your history.
@@ -35,9 +35,9 @@ export default function History() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-7xl">
             {recentGames.map((game) => (
-              <Card key={game.id}>
+              <Card key={game.id} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle>
                     {game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}

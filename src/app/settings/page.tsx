@@ -58,12 +58,12 @@ export default function Settings() {
 
   return (
     <MainLayout>
-      <div className="container py-8">
-        <h1 className="mb-6 text-3xl font-bold">Settings</h1>
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <h1 className="mb-8 text-3xl font-bold">Settings</h1>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
+        <div className="grid gap-6 md:grid-cols-2 mx-auto max-w-6xl">
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Appearance</CardTitle>
               <CardDescription>
                 Customize how the app looks
@@ -90,8 +90,8 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Storage Options</CardTitle>
               <CardDescription>
                 Choose where to store your game data
@@ -141,8 +141,8 @@ export default function Settings() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Data Management</CardTitle>
               <CardDescription>
                 Manage your game data

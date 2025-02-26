@@ -7,15 +7,15 @@ import { ArrowRight, Plus } from "lucide-react";
 export default function Home() {
   return (
     <MainLayout>
-      <div className="container py-8">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+      <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
+        <div className="flex flex-col items-center justify-center space-y-6 text-center mb-16">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
             Card Score Keeper
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground">
             A digital scorekeeper for card games like Hearts and President.
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 mt-4">
             <Button asChild size="lg">
               <Link href="/game/new" className="gap-2">
                 <Plus className="h-5 w-5" />
@@ -31,9 +31,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-7xl">
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Track Scores</CardTitle>
               <CardDescription>
                 Keep track of scores round by round
@@ -44,8 +44,8 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Game History</CardTitle>
               <CardDescription>
                 Review past games and performance
@@ -56,8 +56,8 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
               <CardTitle>Game Notes</CardTitle>
               <CardDescription>
                 Add notes to games and rounds
