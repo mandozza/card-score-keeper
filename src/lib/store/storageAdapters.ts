@@ -11,19 +11,58 @@ export interface StorageAdapter {
 
 // Local Storage Adapter
 export class LocalStorageAdapter implements StorageAdapter {
-  private storageKey = 'card-score-keeper-games';
+  private storageKey = 'card-score-keeper-games-storage';
 
   private getStoredGames(): Game[] {
     if (typeof window === 'undefined') return [];
 
     const storedGames = localStorage.getItem(this.storageKey);
-    return storedGames ? JSON.parse(storedGames) : [];
+    console.log(`[LocalStorageAdapter] Reading from ${this.storageKey}:`, storedGames);
+
+    if (!storedGames) {
+      console.log('[LocalStorageAdapter] No games found in storage');
+      return [];
+    }
+
+    try {
+      const games = JSON.parse(storedGames);
+      console.log('[LocalStorageAdapter] Games parsed from storage:', games);
+
+      // Convert date strings to Date objects
+      const gamesWithDates = games.map((game: any) => ({
+        ...game,
+        createdAt: new Date(game.createdAt),
+        updatedAt: new Date(game.updatedAt)
+      }));
+
+      console.log('[LocalStorageAdapter] Games with dates converted:', gamesWithDates);
+      return gamesWithDates;
+    } catch (error) {
+      console.error('[LocalStorageAdapter] Error parsing stored games:', error);
+      return [];
+    }
   }
 
   private setStoredGames(games: Game[]): void {
     if (typeof window === 'undefined') return;
 
-    localStorage.setItem(this.storageKey, JSON.stringify(games));
+    try {
+      // Convert Date objects to strings for storage
+      const gamesForStorage = games.map(game => ({
+        ...game,
+        createdAt: game.createdAt instanceof Date
+          ? game.createdAt.toISOString()
+          : game.createdAt,
+        updatedAt: game.updatedAt instanceof Date
+          ? game.updatedAt.toISOString()
+          : game.updatedAt
+      }));
+
+      console.log(`[LocalStorageAdapter] Saving to ${this.storageKey}:`, gamesForStorage);
+      localStorage.setItem(this.storageKey, JSON.stringify(gamesForStorage));
+    } catch (error) {
+      console.error('[LocalStorageAdapter] Error storing games:', error);
+    }
   }
 
   async saveGame(game: Game): Promise<Game> {

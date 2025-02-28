@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { getStorageAdapter } from './storageAdapters';
 import { StorageType } from './storageProvider';
 
@@ -58,7 +58,17 @@ export const useGameStore = create<GameState>()(
 
       setStorageType: (type: StorageType) => set({ storageType: type }),
 
-      setCurrentGame: (game) => set({ currentGame: game }),
+      setCurrentGame: (game) => {
+        set({ currentGame: game });
+
+        // If we're setting a new game, save it to storage
+        if (game) {
+          setTimeout(() => {
+            const state = get();
+            state.saveCurrentGame();
+          }, 0);
+        }
+      },
 
       addPlayer: (player) => set((state) => ({
         currentGame: state.currentGame
@@ -140,13 +150,30 @@ export const useGameStore = create<GameState>()(
       loadGamesFromStorage: async () => {
         try {
           const { storageType } = get();
+          console.log('Loading games from storage type:', storageType);
+
           const adapter = getStorageAdapter(storageType);
           const games = await adapter.getGames();
 
-          set({
-            recentGames: games.filter(game => !game.isActive).slice(0, 10),
-            currentGame: games.find(game => game.isActive) || null
-          });
+          console.log('Games loaded from storage:', games);
+
+          if (games && games.length > 0) {
+            // Ensure dates are properly converted
+            const processedGames = games.map(game => ({
+              ...game,
+              createdAt: game.createdAt instanceof Date ? game.createdAt : new Date(game.createdAt),
+              updatedAt: game.updatedAt instanceof Date ? game.updatedAt : new Date(game.updatedAt)
+            }));
+
+            set({
+              recentGames: processedGames.filter(game => !game.isActive).slice(0, 10),
+              currentGame: processedGames.find(game => game.isActive) || null
+            });
+
+            console.log('Store updated with loaded games');
+          } else {
+            console.log('No games found in storage');
+          }
         } catch (error) {
           console.error('Error loading games from storage:', error);
         }
@@ -157,12 +184,16 @@ export const useGameStore = create<GameState>()(
           const { currentGame, storageType } = get();
           if (!currentGame) return;
 
+          console.log('Saving current game to storage:', currentGame);
           const adapter = getStorageAdapter(storageType);
 
           if (currentGame.id) {
-            await adapter.updateGame(currentGame.id, currentGame);
+            const updatedGame = await adapter.updateGame(currentGame.id, currentGame);
+            console.log('Game updated in storage:', updatedGame);
           } else {
             const savedGame = await adapter.saveGame(currentGame);
+            console.log('Game saved to storage with ID:', savedGame.id);
+            // Update the store with the saved game that has an ID
             set({ currentGame: savedGame });
           }
         } catch (error) {
@@ -172,6 +203,45 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: 'card-score-keeper-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentGame: state.currentGame ? {
+          ...state.currentGame,
+          createdAt: state.currentGame.createdAt instanceof Date
+            ? state.currentGame.createdAt.toISOString()
+            : state.currentGame.createdAt,
+          updatedAt: state.currentGame.updatedAt instanceof Date
+            ? state.currentGame.updatedAt.toISOString()
+            : state.currentGame.updatedAt,
+        } : null,
+        recentGames: state.recentGames.map(game => ({
+          ...game,
+          createdAt: game.createdAt instanceof Date
+            ? game.createdAt.toISOString()
+            : game.createdAt,
+          updatedAt: game.updatedAt instanceof Date
+            ? game.updatedAt.toISOString()
+            : game.updatedAt,
+        })),
+        storageType: state.storageType,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Convert ISO date strings back to Date objects
+          if (state.currentGame) {
+            state.currentGame.createdAt = new Date(state.currentGame.createdAt);
+            state.currentGame.updatedAt = new Date(state.currentGame.updatedAt);
+          }
+
+          state.recentGames = state.recentGames.map(game => ({
+            ...game,
+            createdAt: new Date(game.createdAt),
+            updatedAt: new Date(game.updatedAt),
+          }));
+
+          console.log('Storage rehydrated successfully');
+        }
+      },
     }
   )
 );

@@ -5,11 +5,17 @@ import { useGameStore } from "@/lib/store/gameStore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function CurrentGameCard() {
   const { currentGame } = useGameStore();
+  const [isClient, setIsClient] = useState(false);
 
-  if (!currentGame || !currentGame.isActive) {
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient || !currentGame || !currentGame.isActive) {
     return null;
   }
 
@@ -26,13 +32,32 @@ export function CurrentGameCard() {
     };
   });
 
+  // Safely format dates
+  const formatDate = (dateInput: Date | string) => {
+    try {
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
+  const formatDateTime = (dateInput: Date | string) => {
+    try {
+      const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      return date.toLocaleString();
+    } catch (e) {
+      return 'Invalid date';
+    }
+  };
+
   return (
     <Card className="shadow-md border-primary/20 mb-8">
       <CardHeader className="pb-2 bg-primary/5">
         <CardTitle className="flex justify-between items-center">
           <span>Current Game: {currentGame.gameType}</span>
           <span className="text-sm font-normal text-muted-foreground">
-            {new Date(currentGame.createdAt).toLocaleDateString()}
+            {formatDate(currentGame.createdAt)}
           </span>
         </CardTitle>
         <CardDescription>
@@ -55,7 +80,7 @@ export function CurrentGameCard() {
           <div>
             <h3 className="text-sm font-medium mb-2">Game Details</h3>
             <p className="text-sm">Target score: {currentGame.endScore}</p>
-            <p className="text-sm">Last updated: {new Date(currentGame.updatedAt).toLocaleString()}</p>
+            <p className="text-sm">Last updated: {formatDateTime(currentGame.updatedAt)}</p>
           </div>
         </div>
       </CardContent>

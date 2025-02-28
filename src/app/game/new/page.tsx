@@ -67,11 +67,24 @@ export default function NewGame() {
       updatedAt: new Date(),
     };
 
-    // Set current game in store
-    setCurrentGame(newGame);
+    try {
+      // Set current game in store
+      setCurrentGame(newGame);
 
-    // Navigate to game page
-    router.push(`/game/${newGame.id}`);
+      // Explicitly save the game to storage
+      setTimeout(() => {
+        const { saveCurrentGame } = useGameStore.getState();
+        saveCurrentGame().then(() => {
+          console.log('New game saved successfully');
+        });
+      }, 0);
+
+      // Navigate to game page
+      router.push(`/game/${newGame.id}`);
+    } catch (error) {
+      console.error('Error starting game:', error);
+      toast.error('Failed to start game. Please try again.');
+    }
   };
 
   return (
