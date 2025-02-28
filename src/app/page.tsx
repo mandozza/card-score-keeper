@@ -1,8 +1,11 @@
+"use client";
+
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
+import { CurrentGameCard } from "@/components/current-game-card";
 
 export default function Home() {
   return (
@@ -29,6 +32,11 @@ export default function Home() {
               </Link>
             </Button>
           </div>
+        </div>
+
+        {/* Current Game Section */}
+        <div className="max-w-7xl mx-auto">
+          <CurrentGameCard />
         </div>
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-7xl">
