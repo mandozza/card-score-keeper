@@ -13,7 +13,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
         <div className="flex flex-col items-center justify-center space-y-6 text-center mb-16">
           <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-            Card Score Keeper
+            TallyJack
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground">
             A digital scorekeeper for card games like Hearts and President.

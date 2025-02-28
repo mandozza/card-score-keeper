@@ -30,7 +30,7 @@ export function Header() {
       <div className="container mx-auto px-4 flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-8 flex items-center space-x-2">
-            <span className="font-bold text-lg">Card Score Keeper</span>
+            <span className="font-bold text-lg">TallyJack</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
             <Link

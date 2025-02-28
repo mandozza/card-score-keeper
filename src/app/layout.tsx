@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Card Score Keeper",
+  title: "TallyJack",
   description: "A digital scorekeeper for card games",
 };
 
