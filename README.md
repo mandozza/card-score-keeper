@@ -1,4 +1,4 @@
-# Card Score Keeper
+# TallyJack
 
 A digital scorekeeper for card games like Hearts and President. This application enables players to easily start a game, track scores round by round, assign points based on game rules, and manage player history.
 
