@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 
 export default function GameDetail() {
@@ -30,6 +30,11 @@ export default function GameDetail() {
   const [editRoundData, setEditRoundData] = useState<{ [key: string]: number }>({});
   const [editRoundNote, setEditRoundNote] = useState("");
   const [showEditRoundDialog, setShowEditRoundDialog] = useState(false);
+
+  // Add state for editing player names
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [editPlayerName, setEditPlayerName] = useState("");
+  const [showEditPlayerDialog, setShowEditPlayerDialog] = useState(false);
 
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
@@ -194,6 +199,54 @@ export default function GameDetail() {
     updateRound(editingRound.roundNumber, updatedRound);
     setShowEditRoundDialog(false);
     toast.success(`Round ${editingRound.roundNumber} updated`);
+  };
+
+  // Add handler for opening the edit player dialog
+  const handleOpenEditPlayerDialog = (player: Player) => {
+    setEditingPlayer(player);
+    setEditPlayerName(player.name);
+    setShowEditPlayerDialog(true);
+  };
+
+  // Add handler for saving edited player name
+  const handleSaveEditedPlayer = () => {
+    if (!editingPlayer || !editPlayerName.trim()) return;
+
+    // Create a new player object with the updated name
+    const updatedPlayer: Player = {
+      ...editingPlayer,
+      name: editPlayerName.trim()
+    };
+
+    // Update the player in the game
+    if (game) {
+      const updatedPlayers = game.players.map(p =>
+        p.id === updatedPlayer.id ? updatedPlayer : p
+      );
+
+      // Update the game in the store
+      const updatedGame: Game = {
+        ...game,
+        players: updatedPlayers,
+        updatedAt: new Date()
+      };
+
+      // Update the local state
+      setGame(updatedGame);
+
+      // Update the game in the store
+      // Since we don't have a direct updatePlayer function in the store,
+      // we'll need to update the entire currentGame
+      useGameStore.setState({ currentGame: updatedGame });
+
+      // Save the game to storage
+      setTimeout(() => {
+        useGameStore.getState().saveCurrentGame();
+      }, 0);
+
+      setShowEditPlayerDialog(false);
+      toast.success(`Player name updated to ${editPlayerName}`);
+    }
   };
 
   const handleAddGameNote = () => {
@@ -419,7 +472,17 @@ export default function GameDetail() {
                       className="flex items-center justify-between p-2 bg-muted rounded-md"
                     >
                       <span>{player.name}</span>
-                      <span className="font-medium">{totalScores[player.id]}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{totalScores[player.id]}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenEditPlayerDialog(player)}
+                          className="h-8 w-8"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -510,6 +573,41 @@ export default function GameDetail() {
               Cancel
             </Button>
             <Button onClick={handleSaveEditedRound}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Edit Player Dialog */}
+      <Dialog open={showEditPlayerDialog} onOpenChange={setShowEditPlayerDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Player</DialogTitle>
+            <DialogDescription>
+              Update player name
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Label htmlFor="edit-player-name">Player Name</Label>
+            <Input
+              id="edit-player-name"
+              value={editPlayerName}
+              onChange={(e) => setEditPlayerName(e.target.value)}
+              placeholder="Enter player name"
+              className="mt-1"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditPlayerDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditedPlayer}
+              disabled={!editPlayerName.trim()}
+            >
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
