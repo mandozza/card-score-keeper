@@ -11,19 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2 } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 
 export default function GameDetail() {
   const params = useParams();
   const router = useRouter();
-  const { currentGame, addRound, addNote, endGame } = useGameStore();
+  const { currentGame, addRound, addNote, endGame, updateRound } = useGameStore();
   const [game, setGame] = useState<Game | null>(null);
   const [newRound, setNewRound] = useState<{ [key: string]: number }>({});
   const [roundNote, setRoundNote] = useState("");
   const [gameNote, setGameNote] = useState("");
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
+
+  // Add state for editing rounds
+  const [editingRound, setEditingRound] = useState<Round | null>(null);
+  const [editRoundData, setEditRoundData] = useState<{ [key: string]: number }>({});
+  const [editRoundNote, setEditRoundNote] = useState("");
+  const [showEditRoundDialog, setShowEditRoundDialog] = useState(false);
 
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
@@ -102,6 +108,14 @@ export default function GameDetail() {
     });
   };
 
+  // Add handler for editing round score changes
+  const handleEditScoreChange = (playerId: string, value: string) => {
+    setEditRoundData({
+      ...editRoundData,
+      [playerId]: value === "" ? 0 : parseInt(value, 10),
+    });
+  };
+
   const handleAddRound = () => {
     const roundNumber = game.rounds.length + 1;
     const playerScores: PlayerScore[] = Object.entries(newRound).map(
@@ -143,6 +157,43 @@ export default function GameDetail() {
       setWinner(winningPlayer.id);
       setShowEndGameDialog(true);
     }
+  };
+
+  // Add handler for opening the edit round dialog
+  const handleOpenEditRoundDialog = (round: Round) => {
+    setEditingRound(round);
+
+    // Initialize edit round data with current scores
+    const roundData: { [key: string]: number } = {};
+    round.playerScores.forEach((score) => {
+      roundData[score.playerId] = score.score;
+    });
+
+    setEditRoundData(roundData);
+    setEditRoundNote(round.notes || "");
+    setShowEditRoundDialog(true);
+  };
+
+  // Add handler for saving edited round
+  const handleSaveEditedRound = () => {
+    if (!editingRound) return;
+
+    const playerScores: PlayerScore[] = Object.entries(editRoundData).map(
+      ([playerId, score]) => ({
+        playerId,
+        score,
+      })
+    );
+
+    const updatedRound: Round = {
+      ...editingRound,
+      playerScores,
+      notes: editRoundNote || undefined,
+    };
+
+    updateRound(editingRound.roundNumber, updatedRound);
+    setShowEditRoundDialog(false);
+    toast.success(`Round ${editingRound.roundNumber} updated`);
   };
 
   const handleAddGameNote = () => {
@@ -208,6 +259,7 @@ export default function GameDetail() {
                               </th>
                             ))}
                             <th className="py-2 text-left font-medium">Notes</th>
+                            <th className="py-2 text-left font-medium">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -227,6 +279,15 @@ export default function GameDetail() {
                               <td className="py-2 text-sm text-muted-foreground">
                                 {round.notes}
                               </td>
+                              <td className="py-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleOpenEditRoundDialog(round)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </td>
                             </tr>
                           ))}
                           <tr className="font-bold">
@@ -236,6 +297,7 @@ export default function GameDetail() {
                                 {totalScores[player.id]}
                               </td>
                             ))}
+                            <td></td>
                             <td></td>
                           </tr>
                         </tbody>
@@ -302,112 +364,72 @@ export default function GameDetail() {
                   <CardContent className="space-y-4">
                     <div>
                       <Label htmlFor="game-note">New Note</Label>
-                      <div className="mt-1 flex flex-col sm:flex-row gap-2">
-                        <Input
-                          id="game-note"
-                          value={gameNote}
-                          onChange={(e) => setGameNote(e.target.value)}
-                          placeholder="Add a game note"
-                          className="flex-1"
-                        />
-                        <Button onClick={handleAddGameNote} className="w-full sm:w-auto">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Note
-                        </Button>
-                      </div>
+                      <Input
+                        id="game-note"
+                        value={gameNote}
+                        onChange={(e) => setGameNote(e.target.value)}
+                        placeholder="Add a game note"
+                        className="mt-1"
+                      />
                     </div>
 
                     {game.notes.length > 0 ? (
-                      <div className="space-y-2">
+                      <div className="mt-4 space-y-2">
                         <h3 className="font-medium">Existing Notes</h3>
                         <ul className="space-y-2">
                           {game.notes.map((note, index) => (
-                            <li
-                              key={index}
-                              className="rounded-md border p-3 text-sm"
-                            >
+                            <li key={index} className="p-2 bg-muted rounded-md">
                               {note}
                             </li>
                           ))}
                         </ul>
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">
-                        No notes added yet
-                      </p>
+                      <p className="text-muted-foreground">No notes yet</p>
                     )}
                   </CardContent>
+                  <CardFooter>
+                    <Button
+                      onClick={handleAddGameNote}
+                      className="ml-auto gap-2"
+                      disabled={!gameNote.trim()}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Note
+                    </Button>
+                  </CardFooter>
                 </Card>
               </TabsContent>
             </Tabs>
           </div>
 
-          <div className="mt-4 md:mt-0">
+          <div>
             <Card>
               <CardHeader>
-                <CardTitle>Game Summary</CardTitle>
+                <CardTitle>Players</CardTitle>
+                <CardDescription>
+                  {game.players.length} players in this game
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Game Type</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}
-                    {game.gameType === "hearts" && " (lowest score wins)"}
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium">End Score</h3>
-                  <p className="text-sm text-muted-foreground">{game.endScore}</p>
-                </div>
-
-                <div>
-                  <h3 className="font-medium">Players</h3>
-                  <ul className="space-y-1 text-sm text-muted-foreground">
-                    {game.players.map((player) => (
-                      <li key={player.id} className="flex items-center justify-between">
-                        <span>{player.name}</span>
-                        <span className="font-medium">
-                          {totalScores[player.id]} pts
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="font-medium">Current Leader</h3>
-                  {game.players.length > 0 ? (
-                    <div className="mt-1 flex items-center gap-2">
-                      <Trophy className="h-4 w-4 text-yellow-500" />
-                      <span>
-                        {
-                          game.players.reduce((leader, player) => {
-                            // For Hearts, lowest score wins
-                            if (game.gameType === "hearts") {
-                              return totalScores[player.id] < totalScores[leader.id]
-                                ? player
-                                : leader;
-                            } else {
-                              // For other games, highest score wins
-                              return totalScores[player.id] > totalScores[leader.id]
-                                ? player
-                                : leader;
-                            }
-                          }, game.players[0]).name
-                        }
-                      </span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No players</p>
-                  )}
-                </div>
+              <CardContent>
+                <ul className="space-y-2">
+                  {game.players.map((player) => (
+                    <li
+                      key={player.id}
+                      className="flex items-center justify-between p-2 bg-muted rounded-md"
+                    >
+                      <span>{player.name}</span>
+                      <span className="font-medium">{totalScores[player.id]}</span>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
 
+      {/* End Game Dialog */}
       <Dialog open={showEndGameDialog} onOpenChange={setShowEndGameDialog}>
         <DialogContent>
           <DialogHeader>
@@ -418,30 +440,19 @@ export default function GameDetail() {
           </DialogHeader>
 
           <div className="py-4">
-            <Label htmlFor="winner">Select Winner</Label>
+            <Label htmlFor="winner">Winner</Label>
             <select
               id="winner"
-              className="mt-1 w-full rounded-md border p-2"
               value={winner || ""}
-              onChange={(e) => setWinner(e.target.value || null)}
+              onChange={(e) => setWinner(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
             >
               <option value="">No winner</option>
-              {game.players
-                .slice()
-                .sort((a, b) => {
-                  // For Hearts, sort by lowest score first
-                  if (game.gameType === "hearts") {
-                    return totalScores[a.id] - totalScores[b.id];
-                  } else {
-                    // For other games, sort by highest score first
-                    return totalScores[b.id] - totalScores[a.id];
-                  }
-                })
-                .map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.name} ({totalScores[player.id]} pts)
-                  </option>
-                ))}
+              {game.players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name} ({totalScores[player.id]} points)
+                </option>
+              ))}
             </select>
           </div>
 
@@ -450,6 +461,55 @@ export default function GameDetail() {
               Cancel
             </Button>
             <Button onClick={handleEndGame}>End Game</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Edit Round Dialog */}
+      <Dialog open={showEditRoundDialog} onOpenChange={setShowEditRoundDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Round {editingRound?.roundNumber}</DialogTitle>
+            <DialogDescription>
+              Update scores for each player
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            {game.players.map((player) => (
+              <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <Label htmlFor={`edit-score-${player.id}`} className="w-full sm:w-24">
+                  {player.name}
+                </Label>
+                <Input
+                  id={`edit-score-${player.id}`}
+                  type="number"
+                  value={editRoundData[player.id] || 0}
+                  onChange={(e) =>
+                    handleEditScoreChange(player.id, e.target.value)
+                  }
+                  className="flex-1"
+                />
+              </div>
+            ))}
+
+            <div className="pt-2">
+              <Label htmlFor="edit-round-note">Round Note (Optional)</Label>
+              <Input
+                id="edit-round-note"
+                value={editRoundNote}
+                onChange={(e) => setEditRoundNote(e.target.value)}
+                placeholder="Add a note for this round"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditRoundDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEditedRound}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
