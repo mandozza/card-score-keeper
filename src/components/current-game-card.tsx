@@ -70,8 +70,8 @@ console.log('CURRENT GAME CARD');
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
-        <div className="grid grid-cols-2 gap-4 mb-2">
-          <div>
+        <div className="grid md:grid-cols-2 gap-4 mb-2">
+          <div className="p-4 bg-muted/50 rounded-lg">
             <h3 className="text-sm font-semibold mb-2">Players</h3>
             <ul className="space-y-1">
               {playerTotals.map(({ player, totalScore }) => (
@@ -82,7 +82,7 @@ console.log('CURRENT GAME CARD');
               ))}
             </ul>
           </div>
-          <div>
+          <div className="p-4 bg-muted/50 rounded-lg">
             <h3 className="text-sm font-semibold mb-2">Game Details</h3>
             <p className="text-sm">Target score: {currentGame.endScore}</p>
             <p className="text-sm">Last updated: {formatDateTime(currentGame.updatedAt)}</p>
