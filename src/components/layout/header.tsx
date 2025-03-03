@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { Plus, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export function Header() {
@@ -60,12 +60,6 @@ export function Header() {
           </nav>
         </div>
         <div className="ml-auto flex items-center space-x-4">
-          <Button asChild size="sm" className="hidden sm:flex gap-1">
-            <Link href="/game/new">
-              <Plus className="h-4 w-4" />
-              <span>New Game</span>
-            </Link>
-          </Button>
           <ThemeToggle />
           <Button
             variant="ghost"
@@ -113,12 +107,6 @@ export function Header() {
           >
             Settings
           </Link>
-          <Button asChild size="sm" className="w-full sm:hidden">
-            <Link href="/game/new" onClick={() => setMobileMenuOpen(false)}>
-              <Plus className="h-4 w-4 mr-2" />
-              <span>New Game</span>
-            </Link>
-          </Button>
         </nav>
       </div>
     </header>

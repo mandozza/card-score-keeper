@@ -15,6 +15,11 @@ export function CurrentGameCard() {
     setIsClient(true);
   }, []);
 
+console.log('CURRENT GAME CARD');
+  console.log('currentGame', currentGame );
+  console.log('isClient', isClient);
+  console.log('currentGame.isActive', currentGame?.isActive);
+
   if (!isClient || !currentGame || !currentGame.isActive) {
     return null;
   }
@@ -55,7 +60,7 @@ export function CurrentGameCard() {
     <Card className="shadow-md border-primary/20 mb-8">
       <CardHeader className="pb-2 bg-primary/5">
         <CardTitle className="flex justify-between items-center">
-          <span>Current Game: {currentGame.gameType}</span>
+          <span>Current Game: {currentGame.gameType.charAt(0).toUpperCase() + currentGame.gameType.slice(1)}</span>
           <span className="text-sm font-normal text-muted-foreground">
             {formatDate(currentGame.createdAt)}
           </span>
@@ -67,7 +72,7 @@ export function CurrentGameCard() {
       <CardContent className="pt-4">
         <div className="grid grid-cols-2 gap-4 mb-2">
           <div>
-            <h3 className="text-sm font-medium mb-2">Players</h3>
+            <h3 className="text-sm font-semibold mb-2">Players</h3>
             <ul className="space-y-1">
               {playerTotals.map(({ player, totalScore }) => (
                 <li key={player.id} className="flex justify-between">
@@ -78,19 +83,21 @@ export function CurrentGameCard() {
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-medium mb-2">Game Details</h3>
+            <h3 className="text-sm font-semibold mb-2">Game Details</h3>
             <p className="text-sm">Target score: {currentGame.endScore}</p>
             <p className="text-sm">Last updated: {formatDateTime(currentGame.updatedAt)}</p>
           </div>
         </div>
       </CardContent>
       <CardFooter className="pt-0">
-        <Button asChild variant="outline" size="sm" className="w-full">
-          <Link href={`/game/${currentGame.id}`} className="gap-2">
-            Continue Game
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Button>
+        <div className="w-full md:w-1/2 mx-auto">
+          <Button asChild variant="outline" size="sm" className="w-full">
+            <Link href={`/game/${currentGame.id}`} className="gap-2">
+              Continue Game
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );
