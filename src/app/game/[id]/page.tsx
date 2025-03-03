@@ -36,6 +36,10 @@ export default function GameDetail() {
   const [editPlayerName, setEditPlayerName] = useState("");
   const [showEditPlayerDialog, setShowEditPlayerDialog] = useState(false);
 
+  // Add state for editing notes
+  const [editingNote, setEditingNote] = useState<{ index: number; text: string } | null>(null);
+  const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
+
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
       // In a real app, we would fetch the game from the API if not in store
@@ -283,6 +287,39 @@ export default function GameDetail() {
     return game.players.find((p) => p.id === playerId)?.name || "Unknown";
   };
 
+  const handleEditNote = (index: number, text: string) => {
+    setEditingNote({ index, text });
+    setShowEditNoteDialog(true);
+  };
+
+  const handleSaveEditedNote = () => {
+    if (!editingNote || !game) return;
+
+    const updatedNotes = [...game.notes];
+    updatedNotes[editingNote.index] = editingNote.text;
+
+    // Update the game in the store
+    const updatedGame: Game = {
+      ...game,
+      notes: updatedNotes,
+      updatedAt: new Date()
+    };
+
+    // Update the local state
+    setGame(updatedGame);
+
+    // Update the game in the store
+    useGameStore.setState({ currentGame: updatedGame });
+
+    // Save the game to storage
+    setTimeout(() => {
+      useGameStore.getState().saveCurrentGame();
+    }, 0);
+
+    setShowEditNoteDialog(false);
+    toast.success('Note updated');
+  };
+
   return (
     <MainLayout>
       <div className="container px-4 py-4 md:py-8">
@@ -447,20 +484,23 @@ export default function GameDetail() {
                       />
                     </div>
 
-                    {game.notes.length > 0 ? (
-                      <div className="mt-4 space-y-2">
-                        <h3 className="font-medium">Existing Notes</h3>
-                        <ul className="space-y-2">
-                          {game.notes.map((note, index) => (
-                            <li key={index} className="p-2 bg-muted rounded-md">
-                              {note}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">No notes yet</p>
-                    )}
+                    <div className="mt-4 space-y-2">
+                      <h3 className="font-medium">Existing Notes</h3>
+                      <ul className="space-y-2">
+                        {game.notes.map((note, index) => (
+                          <li key={index} className="p-2 bg-muted rounded-md flex items-center justify-between">
+                            <span>{note}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditNote(index, note)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </CardContent>
                   <CardFooter>
                     <Button
@@ -632,6 +672,41 @@ export default function GameDetail() {
             <Button
               onClick={handleSaveEditedPlayer}
               disabled={!editPlayerName.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Edit Note Dialog */}
+      <Dialog open={showEditNoteDialog} onOpenChange={setShowEditNoteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Note</DialogTitle>
+            <DialogDescription>
+              Update the note text
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Label htmlFor="edit-note">Note</Label>
+            <Input
+              id="edit-note"
+              value={editingNote?.text || ''}
+              onChange={(e) => setEditingNote(prev => prev ? { ...prev, text: e.target.value } : null)}
+              placeholder="Enter note text"
+              className="mt-1"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditNoteDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditedNote}
+              disabled={!editingNote?.text.trim()}
             >
               Save Changes
             </Button>
