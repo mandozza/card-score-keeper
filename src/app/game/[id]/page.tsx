@@ -459,9 +459,10 @@ export default function GameDetail() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Players</CardTitle>
+                <CardTitle>Game Summary</CardTitle>
                 <CardDescription>
-                  {game.players.length} players in this game
+                  <div>{game.players.length} players in this game</div>
+                  <div>Game ends at {game.endScore} points{game.gameType === "hearts" && " (lowest score wins)"}</div>
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -471,7 +472,12 @@ export default function GameDetail() {
                       key={player.id}
                       className="flex items-center justify-between p-2 bg-muted rounded-md"
                     >
-                      <span>{player.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span>{player.name}</span>
+                        {player.id === getDefaultWinner() && (
+                          <Trophy className="h-4 w-4 text-yellow-500" />
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{totalScores[player.id]}</span>
                         <Button
