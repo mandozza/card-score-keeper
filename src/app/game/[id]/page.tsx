@@ -130,10 +130,35 @@ export default function GameDetail() {
       })
     );
 
+    // Get current leader before adding new scores
+    const currentLeader = getDefaultWinner();
+
+    // Calculate new totals with the new round
+    const updatedTotals = { ...totalScores };
+    playerScores.forEach((score) => {
+      updatedTotals[score.playerId] += score.score;
+    });
+
+    // Determine new leader
+    const newLeader = game.players.reduce((leader, player) => {
+      if (game.gameType === "hearts") {
+        return updatedTotals[player.id] < updatedTotals[leader.id] ? player : leader;
+      }
+      return updatedTotals[player.id] > updatedTotals[leader.id] ? player : leader;
+    }, game.players[0]);
+
+    // Add note about leader change if different
+    let finalNote = roundNote;
+    if (currentLeader !== newLeader.id) {
+      const leaderName = game.players.find(p => p.id === newLeader.id)?.name || '';
+      const leaderMessage = `${leaderName.charAt(0).toUpperCase() + leaderName.slice(1)} takes the lead!`;
+      finalNote = roundNote ? `${roundNote} - ${leaderMessage}` : leaderMessage;
+    }
+
     const round: Round = {
       roundNumber,
       playerScores,
-      notes: roundNote || undefined,
+      notes: finalNote || undefined,
     };
 
     addRound(round);
@@ -149,17 +174,8 @@ export default function GameDetail() {
     toast.success(`Round ${roundNumber} added`);
 
     // Check if any player has reached the end score
-    const updatedTotals = { ...totalScores };
-    playerScores.forEach((score) => {
-      updatedTotals[score.playerId] += score.score;
-    });
-
-    const winningPlayer = game.players.find(
-      (player) => updatedTotals[player.id] >= game.endScore
-    );
-
-    if (winningPlayer) {
-      setWinner(winningPlayer.id);
+    if (game.players.find((player) => updatedTotals[player.id] >= game.endScore)) {
+      setWinner(newLeader.id);
       setShowEndGameDialog(true);
     }
   };
@@ -305,34 +321,39 @@ export default function GameDetail() {
                       <table className="w-full border-collapse min-w-[400px]">
                         <thead>
                           <tr className="border-b">
-                            <th className="py-2 text-left font-medium">Round</th>
+                            <th className="py-2 px-4 text-left font-medium">Round</th>
                             {game.players.map((player) => (
-                              <th key={player.id} className="py-2 text-left font-medium">
-                                {player.name}
+                              <th key={player.id} className={`py-2 px-4 text-left font-medium ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
+                                <div className="flex items-center gap-2">
+                                  <span className="capitalize">{player.name}</span>
+                                  {player.id === getDefaultWinner() && (
+                                    <Trophy className="h-4 w-4 text-yellow-500" />
+                                  )}
+                                </div>
                               </th>
                             ))}
-                            <th className="py-2 text-left font-medium">Notes</th>
-                            <th className="py-2 text-left font-medium">Actions</th>
+                            <th className="py-2 px-4 text-left font-medium">Notes</th>
+                            <th className="py-2 px-4 text-left font-medium">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {game.rounds.map((round) => (
                             <tr key={round.roundNumber} className="border-b">
-                              <td className="py-2 pr-4">{round.roundNumber}</td>
+                              <td className="py-2 px-4">{round.roundNumber}</td>
                               {game.players.map((player) => {
                                 const score = round.playerScores.find(
                                   (s) => s.playerId === player.id
                                 );
                                 return (
-                                  <td key={player.id} className="py-2 pr-4">
+                                  <td key={player.id} className={`py-2 px-4 ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
                                     {score ? score.score : 0}
                                   </td>
                                 );
                               })}
-                              <td className="py-2 text-sm text-muted-foreground">
+                              <td className="py-2 px-4 text-sm text-muted-foreground">
                                 {round.notes}
                               </td>
-                              <td className="py-2">
+                              <td className="py-2 px-4">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -344,9 +365,9 @@ export default function GameDetail() {
                             </tr>
                           ))}
                           <tr className="font-bold">
-                            <td className="py-2 pr-4">Total</td>
+                            <td className="py-2 px-4">Total</td>
                             {game.players.map((player) => (
-                              <td key={player.id} className="py-2 pr-4">
+                              <td key={player.id} className={`py-2 px-4 ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
                                 {totalScores[player.id]}
                               </td>
                             ))}
@@ -372,7 +393,7 @@ export default function GameDetail() {
                     {game.players.map((player) => (
                       <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                         <Label htmlFor={`score-${player.id}`} className="w-full sm:w-24">
-                          {player.name}
+                          {player.name.charAt(0).toUpperCase() + player.name.slice(1)}
                         </Label>
                         <Input
                           id={`score-${player.id}`}
@@ -473,7 +494,7 @@ export default function GameDetail() {
                       className="flex items-center justify-between p-2 bg-muted rounded-md"
                     >
                       <div className="flex items-center gap-2">
-                        <span>{player.name}</span>
+                        <span className="capitalize">{player.name}</span>
                         {player.id === getDefaultWinner() && (
                           <Trophy className="h-4 w-4 text-yellow-500" />
                         )}
