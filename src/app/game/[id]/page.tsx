@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
 import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
+import dynamic from "next/dynamic";
+
+const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
 export default function GameDetail() {
   const params = useParams();
@@ -42,6 +45,9 @@ export default function GameDetail() {
   const [editingNote, setEditingNote] = useState<{ index: number; text: string } | null>(null);
   const [showEditNoteDialog, setShowEditNoteDialog] = useState(false);
 
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
       // In a real app, we would fetch the game from the API if not in store
@@ -58,6 +64,21 @@ export default function GameDetail() {
     });
     setNewRound(initialRound);
   }, [currentGame, params.id, router]);
+
+  useEffect(() => {
+    // Update window size
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Determine the default winner based on game type
   const getDefaultWinner = () => {
@@ -356,6 +377,10 @@ export default function GameDetail() {
     const shootingPlayerName = getPlayerName(shootingPlayer);
     setRoundNote(`${shootingPlayerName} shot the moon! 🌙`);
 
+    // Show confetti
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 5000); // Hide after 5 seconds
+
     setNewRound(shootMoonScores);
     setShowShootMoonDialog(false);
     setShootingPlayer(null);
@@ -363,6 +388,15 @@ export default function GameDetail() {
 
   return (
     <MainLayout>
+      {showConfetti && (
+        <ReactConfetti
+          width={windowSize.width}
+          height={windowSize.height}
+          numberOfPieces={200}
+          recycle={false}
+          colors={['#c084fc', '#a855f7', '#7c3aed', '#6b21a8']} // Purple theme colors
+        />
+      )}
       <div className="container px-4 py-4 md:py-8">
         <div className="mb-4 md:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
