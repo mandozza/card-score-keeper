@@ -24,6 +24,8 @@ export default function GameDetail() {
   const [gameNote, setGameNote] = useState("");
   const [showEndGameDialog, setShowEndGameDialog] = useState(false);
   const [winner, setWinner] = useState<string | null>(null);
+  const [showShootMoonDialog, setShowShootMoonDialog] = useState(false);
+  const [shootingPlayer, setShootingPlayer] = useState<string | null>(null);
 
   // Add state for editing rounds
   const [editingRound, setEditingRound] = useState<Round | null>(null);
@@ -134,6 +136,17 @@ export default function GameDetail() {
       })
     );
 
+    // Validate Hearts scoring rules
+    if (game.gameType === "hearts") {
+      const totalPoints = playerScores.reduce((sum, score) => sum + score.score, 0);
+      const shootTheMoonPoints = (game.players.length - 1) * 26;
+
+      if (totalPoints !== 26 && totalPoints !== shootTheMoonPoints) {
+        toast.error(`Invalid scores. Total points must be either 26 or ${shootTheMoonPoints} (shoot the moon)`);
+        return;
+      }
+    }
+
     // Get current leader before adding new scores
     const currentLeader = getDefaultWinner();
 
@@ -209,6 +222,17 @@ export default function GameDetail() {
         score,
       })
     );
+
+    // Validate Hearts scoring rules
+    if (game.gameType === "hearts") {
+      const totalPoints = playerScores.reduce((sum, score) => sum + score.score, 0);
+      const shootTheMoonPoints = (game.players.length - 1) * 26;
+
+      if (totalPoints !== 26 && totalPoints !== shootTheMoonPoints) {
+        toast.error(`Invalid scores. Total points must be either 26 or ${shootTheMoonPoints} (shoot the moon)`);
+        return;
+      }
+    }
 
     const updatedRound: Round = {
       ...editingRound,
@@ -318,6 +342,23 @@ export default function GameDetail() {
 
     setShowEditNoteDialog(false);
     toast.success('Note updated');
+  };
+
+  const handleShootMoon = () => {
+    if (!shootingPlayer) return;
+
+    const shootMoonScores: { [key: string]: number } = {};
+    game.players.forEach((player) => {
+      shootMoonScores[player.id] = player.id === shootingPlayer ? 0 : 26;
+    });
+
+    // Add note about who shot the moon
+    const shootingPlayerName = getPlayerName(shootingPlayer);
+    setRoundNote(`${shootingPlayerName} shot the moon! 🌙`);
+
+    setNewRound(shootMoonScores);
+    setShowShootMoonDialog(false);
+    setShootingPlayer(null);
   };
 
   return (
@@ -527,6 +568,19 @@ export default function GameDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {game.gameType === "hearts" && (
+                  <div className="mb-6">
+                    <Button
+                      variant="default"
+                      onClick={() => setShowShootMoonDialog(true)}
+                      className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-6 flex items-center justify-center gap-2"
+                    >
+                      <span className="text-xl">🌙</span>
+                      Shoot the Moon!
+                      <span className="text-xl">⭐️</span>
+                    </Button>
+                  </div>
+                )}
                 <ul className="space-y-2">
                   {game.players.map((player) => (
                     <li
@@ -709,6 +763,47 @@ export default function GameDetail() {
               disabled={!editingNote?.text.trim()}
             >
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Shoot the Moon Dialog */}
+      <Dialog open={showShootMoonDialog} onOpenChange={setShowShootMoonDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Shoot the Moon</DialogTitle>
+            <DialogDescription>
+              Select the player who shot the moon. They will receive 0 points while all other players receive 26 points.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <Label htmlFor="shooting-player">Who Shot the Moon?</Label>
+            <select
+              id="shooting-player"
+              value={shootingPlayer || ""}
+              onChange={(e) => setShootingPlayer(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1"
+            >
+              <option value="">Select a player</option>
+              {game.players.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowShootMoonDialog(false);
+              setShootingPlayer(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleShootMoon} disabled={!shootingPlayer}>
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>
