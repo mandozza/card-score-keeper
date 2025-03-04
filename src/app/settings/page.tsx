@@ -10,8 +10,10 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useStorage } from "@/lib/store/storageProvider";
+import { getStorageAdapter } from "@/lib/store/storageAdapters";
 import { Moon, Sun, Trash2, Database, HardDrive } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Game } from "@/lib/store/gameStore";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -27,13 +29,28 @@ export default function Settings() {
     }
   }, [contextStorageType, setStorageType, storageType]);
 
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
     if (confirmClear) {
-      // In a real app, we would clear the history from the database
-      // For now, we'll just clear the current game
-      clearCurrentGame();
-      toast.success("Game history cleared");
-      setConfirmClear(false);
+      try {
+        // Get all games from storage
+        const adapter = getStorageAdapter(contextStorageType);
+        const games = await adapter.getGames();
+
+        // Delete each game
+        await Promise.all(games
+          .filter((game): game is Game & { id: string } => typeof game.id === 'string')
+          .map(game => adapter.deleteGame(game.id)));
+
+        // Clear the current game and recent games from the store
+        clearCurrentGame();
+        useGameStore.setState({ recentGames: [] });
+
+        toast.success("Game history cleared");
+        setConfirmClear(false);
+      } catch (error) {
+        console.error('Error clearing game history:', error);
+        toast.error('Failed to clear game history');
+      }
     } else {
       setConfirmClear(true);
     }
