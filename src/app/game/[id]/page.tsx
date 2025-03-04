@@ -20,7 +20,7 @@ const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 export default function GameDetail() {
   const params = useParams();
   const router = useRouter();
-  const { currentGame, addRound, addNote, endGame, updateRound } = useGameStore();
+  const { currentGame, addRound, addNote, endGame, updateRound, recentGames } = useGameStore();
   const [game, setGame] = useState<Game | null>(null);
   const [newRound, setNewRound] = useState<{ [key: string]: number }>({});
   const [roundNote, setRoundNote] = useState("");
@@ -51,20 +51,31 @@ export default function GameDetail() {
 
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
-      // In a real app, we would fetch the game from the API if not in store
-      router.push("/");
-      return;
+      // Check if the game exists in recentGames
+      const pastGame = recentGames.find(game => game.id === params.id);
+      if (pastGame) {
+        setGame(pastGame);
+        // Initialize new round with player IDs
+        const initialRound: { [key: string]: number } = {};
+        pastGame.players.forEach((player) => {
+          initialRound[player.id] = 0;
+        });
+        setNewRound(initialRound);
+      } else {
+        // Game not found in current or recent games
+        router.push("/");
+        return;
+      }
+    } else {
+      setGame(currentGame);
+      // Initialize new round with player IDs
+      const initialRound: { [key: string]: number } = {};
+      currentGame.players.forEach((player) => {
+        initialRound[player.id] = 0;
+      });
+      setNewRound(initialRound);
     }
-
-    setGame(currentGame);
-
-    // Initialize new round with player IDs
-    const initialRound: { [key: string]: number } = {};
-    currentGame.players.forEach((player) => {
-      initialRound[player.id] = 0;
-    });
-    setNewRound(initialRound);
-  }, [currentGame, params.id, router]);
+  }, [currentGame, params.id, router, recentGames]);
 
   useEffect(() => {
     // Update window size
@@ -407,9 +418,11 @@ export default function GameDetail() {
             </Button>
             <h1 className="text-2xl md:text-3xl font-bold">{game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}</h1>
           </div>
-          <Button variant="destructive" onClick={handleOpenEndGameDialog}>
-            End Game
-          </Button>
+          {game.isActive && (
+            <Button variant="destructive" onClick={handleOpenEndGameDialog}>
+              End Game
+            </Button>
+          )}
         </div>
 
         <div className="grid gap-4 md:gap-6 md:grid-cols-3">
@@ -417,7 +430,7 @@ export default function GameDetail() {
             <Tabs defaultValue="scoreboard" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="scoreboard">Scoreboard</TabsTrigger>
-                <TabsTrigger value="add-round">Add Round</TabsTrigger>
+                {game.isActive && <TabsTrigger value="add-round">Add Round</TabsTrigger>}
                 <TabsTrigger value="notes">Notes</TabsTrigger>
               </TabsList>
 
@@ -447,7 +460,7 @@ export default function GameDetail() {
                               </th>
                             ))}
                             <th className="py-2 px-4 text-left font-medium">Notes</th>
-                            <th className="py-2 px-4 text-left font-medium">Actions</th>
+                            {game.isActive && <th className="py-2 px-4 text-left font-medium">Actions</th>}
                           </tr>
                         </thead>
                         <tbody>
@@ -467,15 +480,17 @@ export default function GameDetail() {
                               <td className="py-2 px-4 text-sm text-muted-foreground">
                                 {round.notes}
                               </td>
-                              <td className="py-2 px-4">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleOpenEditRoundDialog(round)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </td>
+                              {game.isActive && (
+                                <td className="py-2 px-4">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenEditRoundDialog(round)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              )}
                             </tr>
                           ))}
                           <tr className="font-bold">
@@ -486,7 +501,7 @@ export default function GameDetail() {
                               </td>
                             ))}
                             <td></td>
-                            <td></td>
+                            {game.isActive && <td></td>}
                           </tr>
                         </tbody>
                       </table>
@@ -495,59 +510,61 @@ export default function GameDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="add-round" className="mt-3 md:mt-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
-                    <CardDescription>
-                      Enter scores for each player
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {game.players.map((player) => (
-                      <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                        <Label htmlFor={`score-${player.id}`} className="w-full sm:w-24">
-                          {player.name.charAt(0).toUpperCase() + player.name.slice(1)}
-                        </Label>
+              {game.isActive && (
+                <TabsContent value="add-round" className="mt-3 md:mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
+                      <CardDescription>
+                        Enter scores for each player
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {game.players.map((player) => (
+                        <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                          <Label htmlFor={`score-${player.id}`} className="w-full sm:w-24">
+                            {player.name.charAt(0).toUpperCase() + player.name.slice(1)}
+                          </Label>
+                          <Input
+                            id={`score-${player.id}`}
+                            type="number"
+                            value={newRound[player.id] || 0}
+                            onChange={(e) =>
+                              handleScoreChange(player.id, e.target.value)
+                            }
+                            className="flex-1"
+                          />
+                        </div>
+                      ))}
+
+                      <div className="pt-2">
+                        <Label htmlFor="round-note">Round Note (Optional)</Label>
                         <Input
-                          id={`score-${player.id}`}
-                          type="number"
-                          value={newRound[player.id] || 0}
-                          onChange={(e) =>
-                            handleScoreChange(player.id, e.target.value)
-                          }
-                          className="flex-1"
+                          id="round-note"
+                          value={roundNote}
+                          onChange={(e) => setRoundNote(e.target.value)}
+                          placeholder="Add a note for this round"
+                          className="mt-1"
                         />
                       </div>
-                    ))}
-
-                    <div className="pt-2">
-                      <Label htmlFor="round-note">Round Note (Optional)</Label>
-                      <Input
-                        id="round-note"
-                        value={roundNote}
-                        onChange={(e) => setRoundNote(e.target.value)}
-                        placeholder="Add a note for this round"
-                        className="mt-1"
-                      />
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button
-                      onClick={handleAddRound}
-                      className="ml-auto gap-2"
-                      disabled={
-                        game.gameType === "hearts" &&
-                        Object.values(newRound).reduce((sum, score) => sum + score, 0) !== 26 &&
-                        Object.values(newRound).reduce((sum, score) => sum + score, 0) !== ((game.players.length - 1) * 26)
-                      }
-                    >
-                      <Save className="h-4 w-4" />
-                      Save Round
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        onClick={handleAddRound}
+                        className="ml-auto gap-2"
+                        disabled={
+                          game.gameType === "hearts" &&
+                          Object.values(newRound).reduce((sum, score) => sum + score, 0) !== 26 &&
+                          Object.values(newRound).reduce((sum, score) => sum + score, 0) !== ((game.players.length - 1) * 26)
+                        }
+                      >
+                        <Save className="h-4 w-4" />
+                        Save Round
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </TabsContent>
+              )}
 
               <TabsContent value="notes" className="mt-3 md:mt-4">
                 <Card>
@@ -612,7 +629,7 @@ export default function GameDetail() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {game.gameType === "hearts" && (
+                {game.gameType === "hearts" && game.isActive && (
                   <>
                     <div className="mb-6">
                       <Button
@@ -657,14 +674,16 @@ export default function GameDetail() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{totalScores[player.id]}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEditPlayerDialog(player)}
-                          className="h-8 w-8"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
+                        {game.isActive && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenEditPlayerDialog(player)}
+                            className="h-8 w-8"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </li>
                   ))}
