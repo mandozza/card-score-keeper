@@ -47,6 +47,7 @@ export default function GameDetail() {
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [activeTab, setActiveTab] = useState("scoreboard");
 
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
@@ -384,6 +385,7 @@ export default function GameDetail() {
     setNewRound(shootMoonScores);
     setShowShootMoonDialog(false);
     setShootingPlayer(null);
+    setActiveTab("add-round"); // Switch to Add Round tab
   };
 
   return (
@@ -397,7 +399,7 @@ export default function GameDetail() {
           colors={['#c084fc', '#a855f7', '#7c3aed', '#6b21a8']} // Purple theme colors
         />
       )}
-      <div className="container px-4 py-4 md:py-8">
+      <div className="container mx-auto px-4 py-4 md:py-8">
         <div className="mb-4 md:mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => router.push("/")}>
@@ -412,7 +414,7 @@ export default function GameDetail() {
 
         <div className="grid gap-4 md:gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
-            <Tabs defaultValue="scoreboard">
+            <Tabs defaultValue="scoreboard" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="scoreboard">Scoreboard</TabsTrigger>
                 <TabsTrigger value="add-round">Add Round</TabsTrigger>

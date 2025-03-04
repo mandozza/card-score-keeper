@@ -133,7 +133,7 @@ export const useGameStore = create<GameState>()(
         };
 
         set({
-          currentGame: endedGame,
+          currentGame: null,
           recentGames: [endedGame, ...state.recentGames].slice(0, 10)
         });
 

@@ -11,6 +11,9 @@ import Link from "next/link";
 export default function History() {
   const { recentGames, currentGame } = useGameStore();
 
+  // Filter out current game from recent games to avoid duplicate keys
+  const filteredRecentGames = recentGames.filter(game => game.id !== currentGame?.id);
+
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -115,7 +118,7 @@ export default function History() {
               <div>
                 <h2 className="mb-4 text-xl font-semibold">Past Games</h2>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-7xl">
-                  {recentGames.map((game) => renderGameCard(game))}
+                  {filteredRecentGames.map((game) => renderGameCard(game))}
                 </div>
               </div>
             )}
