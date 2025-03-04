@@ -14,6 +14,7 @@ import { useGameStore } from "@/lib/store/gameStore";
 import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
+import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
@@ -48,6 +49,59 @@ export default function GameDetail() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [activeTab, setActiveTab] = useState("scoreboard");
+
+  const [rankConfigs, setRankConfigs] = useState<PlayerRankConfigs>(defaultRankConfigs);
+
+  useEffect(() => {
+    // Load rank configs from localStorage
+    const savedConfigs = localStorage.getItem('rankConfigs');
+    if (savedConfigs) {
+      setRankConfigs(JSON.parse(savedConfigs));
+    }
+  }, []);
+
+  const calculatePointsFromRank = (rank: string, playerCount: number) => {
+    const configs = rankConfigs[playerCount as keyof PlayerRankConfigs];
+    const config = configs.find(c => c.rank === rank);
+    return config?.points || 0;
+  };
+
+  const getRankOptions = (playerCount: number) => {
+    const configs = rankConfigs[playerCount as keyof PlayerRankConfigs];
+    return configs.map(c => c.rank);
+  };
+
+  const [roundRanks, setRoundRanks] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (game?.players) {
+      const initialRanks: { [key: string]: string } = {};
+      game.players.forEach((player) => {
+        initialRanks[player.id] = '';
+      });
+      setRoundRanks(initialRanks);
+    }
+  }, [game]);
+
+  const handleRankChange = (playerId: string, rank: string) => {
+    setRoundRanks(prev => ({
+      ...prev,
+      [playerId]: rank
+    }));
+
+    // Calculate and update the points
+    if (game) {
+      const points = calculatePointsFromRank(rank, game.players.length);
+      setNewRound(prev => ({
+        ...prev,
+        [playerId]: points
+      }));
+    }
+  };
+
+  const isRankTaken = (rank: string) => {
+    return Object.values(roundRanks).includes(rank);
+  };
 
   useEffect(() => {
     if (!currentGame || currentGame.id !== params.id) {
@@ -211,6 +265,26 @@ export default function GameDetail() {
       notes: finalNote || undefined,
     };
 
+    // Update player ranks based on the selected ranks
+    const updatedPlayers = game.players.map(player => ({
+      ...player,
+      rank: roundRanks[player.id] || player.rank
+    }));
+
+    // Update the game in the store with new ranks
+    const updatedGame: Game = {
+      ...game,
+      players: updatedPlayers,
+      updatedAt: new Date()
+    };
+
+    // Update local state
+    setGame(updatedGame);
+
+    // Update store
+    useGameStore.setState({ currentGame: updatedGame });
+
+    // Add the round
     addRound(round);
 
     // Reset form
@@ -219,6 +293,7 @@ export default function GameDetail() {
       resetRound[player.id] = 0;
     });
     setNewRound(resetRound);
+    setRoundRanks({});  // Reset rank selections
     setRoundNote("");
 
     toast.success(`Round ${roundNumber} added`);
@@ -562,24 +637,35 @@ export default function GameDetail() {
                     <CardHeader>
                       <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
                       <CardDescription>
-                        Enter scores for each player
+                        Select the rank for each player
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {game.players.map((player) => (
                         <div key={player.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                          <Label htmlFor={`score-${player.id}`} className="w-full sm:w-24">
-                            {player.name.charAt(0).toUpperCase() + player.name.slice(1)}
+                          <Label htmlFor={`rank-${player.id}`} className="w-full sm:w-24">
+                            {player.name}
                           </Label>
-                          <Input
-                            id={`score-${player.id}`}
-                            type="number"
-                            value={newRound[player.id] || 0}
-                            onChange={(e) =>
-                              handleScoreChange(player.id, e.target.value)
-                            }
-                            className="flex-1"
-                          />
+                          <select
+                            id={`rank-${player.id}`}
+                            value={roundRanks[player.id] || ''}
+                            onChange={(e) => handleRankChange(player.id, e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <option value="">Select rank...</option>
+                            {getRankOptions(game.players.length).map((rank) => (
+                              <option
+                                key={rank}
+                                value={rank}
+                                disabled={isRankTaken(rank) && roundRanks[player.id] !== rank}
+                              >
+                                {rank} ({calculatePointsFromRank(rank, game.players.length)} pts)
+                              </option>
+                            ))}
+                          </select>
+                          <div className="text-sm text-muted-foreground w-20 text-right">
+                            {newRound[player.id] || 0} points
+                          </div>
                         </div>
                       ))}
 
@@ -598,11 +684,7 @@ export default function GameDetail() {
                       <Button
                         onClick={handleAddRound}
                         className="ml-auto gap-2"
-                        disabled={
-                          game.gameType === "hearts" &&
-                          Object.values(newRound).reduce((sum, score) => sum + score, 0) !== 26 &&
-                          Object.values(newRound).reduce((sum, score) => sum + score, 0) !== ((game.players.length - 1) * 26)
-                        }
+                        disabled={Object.values(roundRanks).some(rank => !rank)}
                       >
                         <Save className="h-4 w-4" />
                         Save Round
