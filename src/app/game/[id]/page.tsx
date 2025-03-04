@@ -84,18 +84,32 @@ export default function GameDetail() {
   }, [game]);
 
   const handleRankChange = (playerId: string, rank: string) => {
+    if (!game) return;
+
+    const player = game.players.find(p => p.id === playerId);
+    const oldRank = player?.rank;
+
     setRoundRanks(prev => ({
       ...prev,
       [playerId]: rank
     }));
 
     // Calculate and update the points
-    if (game) {
-      const points = calculatePointsFromRank(rank, game.players.length);
-      setNewRound(prev => ({
-        ...prev,
-        [playerId]: points
-      }));
+    const points = calculatePointsFromRank(rank, game.players.length);
+    setNewRound(prev => ({
+      ...prev,
+      [playerId]: points
+    }));
+
+    // Add note about rank change if it's different
+    if (oldRank && oldRank !== rank) {
+      const playerName = player?.name || '';
+      let rankChangeNote = `${playerName} moved from ${oldRank} to ${rank}`;
+      // Add crown emoji if the player became President
+      if (rank === 'President') {
+        rankChangeNote += ' 👑';
+      }
+      setRoundNote(prev => prev ? `${prev} - ${rankChangeNote}` : rankChangeNote);
     }
   };
 
@@ -571,6 +585,9 @@ export default function GameDetail() {
                                     {player.id === getDefaultWinner() && (
                                       <Trophy className="h-4 w-4 text-yellow-500" />
                                     )}
+                                    {player.rank === 'President' && (
+                                      <span role="img" aria-label="crown">👑</span>
+                                    )}
                                   </div>
                                   {player.rank && (
                                     <span className="text-xs text-muted-foreground font-normal">
@@ -789,35 +806,46 @@ export default function GameDetail() {
                   </>
                 )}
                 <ul className="space-y-2">
-                  {game.players.map((player) => (
-                    <li
-                      key={player.id}
-                      className="flex items-center justify-between p-2 bg-muted rounded-md"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="capitalize">{player.name}</span>
-                        {player.rank && (
-                          <span className="text-xs text-muted-foreground">({player.rank})</span>
-                        )}
-                        {player.id === getDefaultWinner() && (
-                          <Trophy className="h-4 w-4 text-yellow-500" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{totalScores[player.id]}</span>
-                        {game.isActive && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEditPlayerDialog(player)}
-                            className="h-8 w-8"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                  {[...game.players]
+                    .sort((a, b) => {
+                      // For Hearts, sort by lowest score first
+                      if (game.gameType === "hearts") {
+                        return totalScores[a.id] - totalScores[b.id];
+                      }
+                      // For other games, sort by highest score first
+                      return totalScores[b.id] - totalScores[a.id];
+                    })
+                    .map((player) => (
+                      <li
+                        key={player.id}
+                        className="flex items-center justify-between p-2 bg-muted rounded-md"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="capitalize">{player.name}</span>
+                          {player.rank && (
+                            <span className="text-xs text-muted-foreground">
+                              ({player.rank}) {player.rank === 'President' && '👑'}
+                            </span>
+                          )}
+                          {player.id === getDefaultWinner() && (
+                            <Trophy className="h-4 w-4 text-yellow-500" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{totalScores[player.id]}</span>
+                          {game.isActive && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEditPlayerDialog(player)}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
                 </ul>
               </CardContent>
             </Card>
