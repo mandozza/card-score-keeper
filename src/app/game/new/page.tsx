@@ -107,9 +107,6 @@ export default function NewGame() {
                 <SelectContent>
                   <SelectItem value="hearts">Hearts</SelectItem>
                   <SelectItem value="president">President</SelectItem>
-                  <SelectItem value="spades">Spades</SelectItem>
-                  <SelectItem value="rummy">Rummy</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 
@@ -20,7 +20,7 @@ const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 export default function GameDetail() {
   const params = useParams();
   const router = useRouter();
-  const { currentGame, addRound, addNote, endGame, updateRound, recentGames } = useGameStore();
+  const { currentGame, addRound, addNote, endGame, updateRound, recentGames, assignRandomRanks } = useGameStore();
   const [game, setGame] = useState<Game | null>(null);
   const [newRound, setNewRound] = useState<{ [key: string]: number }>({});
   const [roundNote, setRoundNote] = useState("");
@@ -399,6 +399,14 @@ export default function GameDetail() {
     setActiveTab("add-round"); // Switch to Add Round tab
   };
 
+  // Add this section after the loading check and before the return statement
+  const showAssignRanksButton = game && game.rounds.length === 0;
+
+  const handleAssignRanks = () => {
+    assignRandomRanks();
+    toast.success('Ranks assigned randomly!');
+  };
+
   return (
     <MainLayout>
       {showConfetti && (
@@ -410,20 +418,51 @@ export default function GameDetail() {
           colors={['#c084fc', '#a855f7', '#7c3aed', '#6b21a8']} // Purple theme colors
         />
       )}
-      <div className="container mx-auto px-4 py-4 md:py-8">
-        <div className="mb-4 md:mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => router.push("/")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl md:text-3xl font-bold">{game.gameType.charAt(0).toUpperCase() + game.gameType.slice(1)}</h1>
-          </div>
-          {game.isActive && (
-            <Button variant="destructive" onClick={handleOpenEndGameDialog}>
-              End Game
-            </Button>
-          )}
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="flex items-center justify-between mb-8">
+          <Button variant="ghost" onClick={() => router.push('/')} className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold capitalize">{game.gameType}</h1>
         </div>
+
+        {showAssignRanksButton && (
+          <div className="w-full flex justify-center">
+            <Card className="mb-8 w-[75%]">
+              <CardHeader>
+                <CardTitle>Assign Initial Ranks</CardTitle>
+                <CardDescription>
+                  Randomly assign ranks to all players before starting the game
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-4">
+                  <div className={`grid grid-cols-1 ${game.players.length === 4 ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'} gap-4`}>
+                    {game.players.map((player) => (
+                      <div key={player.id} className="flex items-center gap-2 p-2 border rounded">
+                        <User className="h-4 w-4" />
+                        <span>{player.name}</span>
+                        {player.rank && (
+                          <span className="ml-auto text-sm text-muted-foreground">
+                            {player.rank}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    onClick={handleAssignRanks}
+                    className="flex items-center gap-2"
+                  >
+                    <Shuffle className="h-4 w-4" />
+                    Randomly Assign Ranks
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid gap-4 md:gap-6 md:grid-cols-3">
           <div className="md:col-span-2">
@@ -451,10 +490,17 @@ export default function GameDetail() {
                             <th className="py-2 px-4 text-left font-medium">Round</th>
                             {game.players.map((player) => (
                               <th key={player.id} className={`py-2 px-4 text-left font-medium ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
-                                <div className="flex items-center gap-2">
-                                  <span className="capitalize">{player.name}</span>
-                                  {player.id === getDefaultWinner() && (
-                                    <Trophy className="h-4 w-4 text-yellow-500" />
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="capitalize">{player.name}</span>
+                                    {player.id === getDefaultWinner() && (
+                                      <Trophy className="h-4 w-4 text-yellow-500" />
+                                    )}
+                                  </div>
+                                  {player.rank && (
+                                    <span className="text-xs text-muted-foreground font-normal">
+                                      {player.rank}
+                                    </span>
                                   )}
                                 </div>
                               </th>
@@ -668,6 +714,9 @@ export default function GameDetail() {
                     >
                       <div className="flex items-center gap-2">
                         <span className="capitalize">{player.name}</span>
+                        {player.rank && (
+                          <span className="text-xs text-muted-foreground">({player.rank})</span>
+                        )}
                         {player.id === getDefaultWinner() && (
                           <Trophy className="h-4 w-4 text-yellow-500" />
                         )}

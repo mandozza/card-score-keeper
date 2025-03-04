@@ -14,6 +14,9 @@ import { getStorageAdapter } from "@/lib/store/storageAdapters";
 import { Moon, Sun, Trash2, Database, HardDrive } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Game } from "@/lib/store/gameStore";
+import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -21,6 +24,7 @@ export default function Settings() {
   const { storageType: contextStorageType, setStorageType: setContextStorageType } = useStorage();
   const [confirmClear, setConfirmClear] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rankConfigs, setRankConfigs] = useState<PlayerRankConfigs>(defaultRankConfigs);
 
   // Sync storage type from context to game store
   useEffect(() => {
@@ -28,6 +32,14 @@ export default function Settings() {
       setStorageType(contextStorageType);
     }
   }, [contextStorageType, setStorageType, storageType]);
+
+  useEffect(() => {
+    // Load rank configs from localStorage
+    const savedConfigs = localStorage.getItem('rankConfigs');
+    if (savedConfigs) {
+      setRankConfigs(JSON.parse(savedConfigs));
+    }
+  }, []);
 
   const handleClearHistory = async () => {
     if (confirmClear) {
@@ -71,6 +83,14 @@ export default function Settings() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePointsChange = (playerCount: number, index: number, points: number) => {
+    const newConfigs = { ...rankConfigs };
+    newConfigs[playerCount as keyof PlayerRankConfigs][index].points = points;
+    setRankConfigs(newConfigs);
+    localStorage.setItem('rankConfigs', JSON.stringify(newConfigs));
+    toast.success('Rank points updated');
   };
 
   return (
@@ -186,6 +206,52 @@ export default function Settings() {
                   )}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle>Rank Configuration</CardTitle>
+              <CardDescription>
+                Configure points for different ranks based on the number of players
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="4" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="4">4 Players</TabsTrigger>
+                  <TabsTrigger value="5">5 Players</TabsTrigger>
+                  <TabsTrigger value="6">6 Players</TabsTrigger>
+                </TabsList>
+                {[4, 5, 6].map((playerCount) => (
+                  <TabsContent key={playerCount} value={playerCount.toString()}>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Rank</TableHead>
+                          <TableHead>Points</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {rankConfigs[playerCount as keyof PlayerRankConfigs].map((config, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{config.rank}</TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                value={config.points}
+                                onChange={(e) => handlePointsChange(playerCount, index, parseInt(e.target.value) || 0)}
+                                className="w-20"
+                                min={0}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                ))}
+              </Tabs>
             </CardContent>
           </Card>
         </div>

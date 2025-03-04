@@ -6,6 +6,7 @@ import { StorageType } from './storageProvider';
 export interface Player {
   id: string;
   name: string;
+  rank?: string;
 }
 
 export interface PlayerScore {
@@ -47,6 +48,7 @@ interface GameState {
   addRecentGame: (game: Game) => void;
   loadGamesFromStorage: () => Promise<void>;
   saveCurrentGame: () => Promise<void>;
+  assignRandomRanks: () => void;
 }
 
 export const useGameStore = create<GameState>()(
@@ -199,7 +201,45 @@ export const useGameStore = create<GameState>()(
         } catch (error) {
           console.error('Error saving game to storage:', error);
         }
-      }
+      },
+
+      assignRandomRanks: () => set((state) => {
+        if (!state.currentGame) return state;
+
+        const playerCount = state.currentGame.players.length;
+        let ranks: string[];
+
+        switch (playerCount) {
+          case 4:
+            ranks = ['President', 'Vice President', 'Vice Scum', 'Scum'];
+            break;
+          case 5:
+            ranks = ['President', 'Vice President', 'Neutral', 'Vice Scum', 'Scum'];
+            break;
+          case 6:
+            ranks = ['President', 'Vice President', 'Neutral', 'Neutral', 'Vice Scum', 'Scum'];
+            break;
+          default:
+            return state;
+        }
+
+        // Shuffle ranks
+        const shuffledRanks = [...ranks].sort(() => Math.random() - 0.5);
+
+        // Assign ranks to players
+        const updatedPlayers = state.currentGame.players.map((player, index) => ({
+          ...player,
+          rank: shuffledRanks[index]
+        }));
+
+        return {
+          currentGame: {
+            ...state.currentGame,
+            players: updatedPlayers,
+            updatedAt: new Date()
+          }
+        };
+      })
     }),
     {
       name: 'card-score-keeper-storage',
