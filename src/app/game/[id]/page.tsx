@@ -531,7 +531,15 @@ export default function GameDetail() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button onClick={handleAddRound} className="ml-auto gap-2">
+                    <Button
+                      onClick={handleAddRound}
+                      className="ml-auto gap-2"
+                      disabled={
+                        game.gameType === "hearts" &&
+                        Object.values(newRound).reduce((sum, score) => sum + score, 0) !== 26 &&
+                        Object.values(newRound).reduce((sum, score) => sum + score, 0) !== ((game.players.length - 1) * 26)
+                      }
+                    >
                       <Save className="h-4 w-4" />
                       Save Round
                     </Button>
@@ -603,17 +611,35 @@ export default function GameDetail() {
               </CardHeader>
               <CardContent>
                 {game.gameType === "hearts" && (
-                  <div className="mb-6">
-                    <Button
-                      variant="default"
-                      onClick={() => setShowShootMoonDialog(true)}
-                      className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-6 flex items-center justify-center gap-2"
-                    >
-                      <span className="text-xl">🌙</span>
-                      Shoot the Moon!
-                      <span className="text-xl">⭐️</span>
-                    </Button>
-                  </div>
+                  <>
+                    <div className="mb-6">
+                      <Button
+                        variant="default"
+                        onClick={() => setShowShootMoonDialog(true)}
+                        className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-6 flex items-center justify-center gap-2"
+                      >
+                        <span className="text-xl">🌙</span>
+                        Shoot the Moon!
+                        <span className="text-xl">⭐️</span>
+                      </Button>
+                    </div>
+                    <div className="mb-6 p-4 bg-muted rounded-lg">
+                      <div className="text-sm font-medium mb-2">Current Round Points</div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-2xl font-bold">
+                            {Object.values(newRound).reduce((sum, score) => sum + score, 0)}
+                          </span>
+                          <span className="text-muted-foreground"> / 26</span>
+                        </div>
+                        {Object.values(newRound).reduce((sum, score) => sum + score, 0) === 26 ? (
+                          <span className="text-green-500">✓</span>
+                        ) : (
+                          <span className="text-muted-foreground">Points remaining: {26 - Object.values(newRound).reduce((sum, score) => sum + score, 0)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
                 <ul className="space-y-2">
                   {game.players.map((player) => (
