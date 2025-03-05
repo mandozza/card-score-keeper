@@ -15,6 +15,7 @@ import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle } from "luci
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
+import { transformRankText } from "@/lib/utils";
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
@@ -104,7 +105,7 @@ export default function GameDetail() {
     // Add note about rank change if it's different
     if (oldRank && oldRank !== rank) {
       const playerName = player?.name || '';
-      let rankChangeNote = `${playerName} moved from ${oldRank} to ${rank}`;
+      let rankChangeNote = `${playerName} moved from ${transformRankText(oldRank)} to ${transformRankText(rank)}`;
       // Add crown emoji if the player became President
       if (rank === 'President') {
         rankChangeNote += ' 👑';
@@ -513,7 +514,9 @@ export default function GameDetail() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-3xl font-bold capitalize">{game.gameType}</h1>
+          <h1 className="text-3xl font-bold capitalize">
+            {game.gameType === 'president' ? localStorage.getItem('presidentAlias') || 'President' : game.gameType}
+          </h1>
         </div>
 
         {showAssignRanksButton && (
@@ -534,7 +537,7 @@ export default function GameDetail() {
                         <span>{player.name}</span>
                         {player.rank && (
                           <span className="ml-auto text-sm text-muted-foreground">
-                            {player.rank}
+                            {transformRankText(player.rank)}
                           </span>
                         )}
                       </div>
@@ -591,7 +594,7 @@ export default function GameDetail() {
                                   </div>
                                   {player.rank && (
                                     <span className="text-xs text-muted-foreground font-normal">
-                                      {player.rank}
+                                      {transformRankText(player.rank)}
                                     </span>
                                   )}
                                 </div>
@@ -676,7 +679,7 @@ export default function GameDetail() {
                                 value={rank}
                                 disabled={isRankTaken(rank) && roundRanks[player.id] !== rank}
                               >
-                                {rank} ({calculatePointsFromRank(rank, game.players.length)} pts)
+                                {transformRankText(rank)} ({calculatePointsFromRank(rank, game.players.length)} pts)
                               </option>
                             ))}
                           </select>
@@ -824,7 +827,7 @@ export default function GameDetail() {
                           <span className="capitalize">{player.name}</span>
                           {player.rank && (
                             <span className="text-xs text-muted-foreground">
-                              ({player.rank}) {player.rank === 'President' && '👑'}
+                              ({transformRankText(player.rank)}) {player.rank === 'President' && '👑'}
                             </span>
                           )}
                           {player.id === getDefaultWinner() && (

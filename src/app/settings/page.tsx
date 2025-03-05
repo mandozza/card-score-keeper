@@ -17,6 +17,7 @@ import { Game } from "@/lib/store/gameStore";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { transformRankText } from "@/lib/utils";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
@@ -122,8 +123,8 @@ export default function Settings() {
     toast.success('Player added to defaults');
   };
 
-  const handleRemoveDefaultPlayer = (index: number) => {
-    const updatedPlayers = defaultPlayers.filter((_, i) => i !== index);
+  const handleRemoveDefaultPlayer = (playerName: string) => {
+    const updatedPlayers = defaultPlayers.filter((name) => name !== playerName);
     setDefaultPlayers(updatedPlayers);
     localStorage.setItem('defaultPlayers', JSON.stringify(updatedPlayers));
     toast.success('Player removed from defaults');
@@ -161,7 +162,7 @@ export default function Settings() {
                       <TableBody>
                         {rankConfigs[playerCount as keyof PlayerRankConfigs].map((config, index) => (
                           <TableRow key={index}>
-                            <TableCell>{config.rank}</TableCell>
+                            <TableCell>{transformRankText(config.rank)}</TableCell>
                             <TableCell>
                               <Input
                                 type="number"
@@ -244,7 +245,7 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label>Clear Game History</Label>
                   <p className="text-sm text-muted-foreground">
-                    This will permanently delete your current game and history.
+                    This will erase your current game in progress, all completed game records, player scores, and game statistics. This action cannot be undone.
                   </p>
                   <Button
                     variant={confirmClear ? "destructive" : "outline"}
@@ -297,7 +298,7 @@ export default function Settings() {
             <CardHeader className="pb-2">
               <CardTitle>Game Title</CardTitle>
               <CardDescription>
-                Choose how you want to refer to the highest rank
+                Choose how which game title you want to use for President.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -362,16 +363,16 @@ export default function Settings() {
                   <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
                     {[...defaultPlayers]
                       .sort((a, b) => a.localeCompare(b))
-                      .map((player, index) => (
+                      .map((player) => (
                       <div
-                        key={index}
+                        key={player}
                         className="flex items-center justify-between p-2 bg-muted rounded-md"
                       >
                         <span className="truncate">{player}</span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveDefaultPlayer(index)}
+                          onClick={() => handleRemoveDefaultPlayer(player)}
                           className="h-8 w-8 ml-2"
                         >
                           <Trash2 className="h-4 w-4" />
