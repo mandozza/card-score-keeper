@@ -56,11 +56,18 @@ console.log('CURRENT GAME CARD');
     }
   };
 
+  const getDisplayGameType = (gameType: string) => {
+    if (gameType === 'president') {
+      return localStorage.getItem('presidentAlias') || 'President';
+    }
+    return gameType.charAt(0).toUpperCase() + gameType.slice(1);
+  };
+
   return (
     <Card className="shadow-md border-primary/20 mb-8">
       <CardHeader className="pb-2 bg-primary/5">
         <CardTitle className="flex justify-between items-center">
-          <span>Current Game: {currentGame.gameType.charAt(0).toUpperCase() + currentGame.gameType.slice(1)}</span>
+          <span>Current Game: {getDisplayGameType(currentGame.gameType)}</span>
           <span className="text-sm font-normal text-muted-foreground">
             {formatDate(currentGame.createdAt)}
           </span>
