@@ -25,6 +25,8 @@ export default function Settings() {
   const [confirmClear, setConfirmClear] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [rankConfigs, setRankConfigs] = useState<PlayerRankConfigs>(defaultRankConfigs);
+  const [defaultPlayers, setDefaultPlayers] = useState<string[]>([]);
+  const [newPlayerName, setNewPlayerName] = useState('');
 
   // Sync storage type from context to game store
   useEffect(() => {
@@ -38,6 +40,14 @@ export default function Settings() {
     const savedConfigs = localStorage.getItem('rankConfigs');
     if (savedConfigs) {
       setRankConfigs(JSON.parse(savedConfigs));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load default players from localStorage
+    const savedPlayers = localStorage.getItem('defaultPlayers');
+    if (savedPlayers) {
+      setDefaultPlayers(JSON.parse(savedPlayers));
     }
   }, []);
 
@@ -93,123 +103,30 @@ export default function Settings() {
     toast.success('Rank points updated');
   };
 
+  const handleAddDefaultPlayer = () => {
+    if (!newPlayerName.trim()) return;
+
+    const updatedPlayers = [...defaultPlayers, newPlayerName.trim()];
+    setDefaultPlayers(updatedPlayers);
+    localStorage.setItem('defaultPlayers', JSON.stringify(updatedPlayers));
+    setNewPlayerName('');
+    toast.success('Player added to defaults');
+  };
+
+  const handleRemoveDefaultPlayer = (index: number) => {
+    const updatedPlayers = defaultPlayers.filter((_, i) => i !== index);
+    setDefaultPlayers(updatedPlayers);
+    localStorage.setItem('defaultPlayers', JSON.stringify(updatedPlayers));
+    toast.success('Player removed from defaults');
+  };
+
   return (
     <MainLayout>
       <div className="container mx-auto px-4 py-8 md:py-12">
         <h1 className="mb-8 text-3xl font-bold">Settings</h1>
 
         <div className="grid gap-6 md:grid-cols-2 mx-auto max-w-6xl">
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize how the app looks
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="dark-mode">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Switch between light and dark mode
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Sun className="h-4 w-4 text-muted-foreground" />
-                  <Switch
-                    id="dark-mode"
-                    checked={theme === "dark"}
-                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                  />
-                  <Moon className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Storage Options</CardTitle>
-              <CardDescription>
-                Choose where to store your game data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Tabs defaultValue={contextStorageType} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger
-                    value="local"
-                    onClick={() => handleStorageChange('local')}
-                    disabled={isLoading}
-                  >
-                    <HardDrive className="mr-2 h-4 w-4" />
-                    Local Storage
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="mongodb"
-                    onClick={() => handleStorageChange('mongodb')}
-                    disabled={isLoading}
-                  >
-                    <Database className="mr-2 h-4 w-4" />
-                    MongoDB
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="local" className="mt-4">
-                  <div className="space-y-2">
-                    <p className="text-sm">
-                      Data is stored in your browser's local storage. It will be available only on this device and browser.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Note: Clearing browser data will delete your game history.
-                    </p>
-                  </div>
-                </TabsContent>
-                <TabsContent value="mongodb" className="mt-4">
-                  <div className="space-y-2">
-                    <p className="text-sm">
-                      Data is stored in MongoDB. It will be available across devices when you're logged in.
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Note: Internet connection is required to access your data.
-                    </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Data Management</CardTitle>
-              <CardDescription>
-                Manage your game data
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Clear Game History</Label>
-                <p className="text-sm text-muted-foreground">
-                  This will permanently delete your current game and history.
-                </p>
-                <Button
-                  variant={confirmClear ? "destructive" : "outline"}
-                  onClick={handleClearHistory}
-                  className="mt-2"
-                >
-                  {confirmClear ? (
-                    <>
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Confirm Clear History
-                    </>
-                  ) : (
-                    "Clear History"
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+          <Card className="shadow-sm hover:shadow-md transition-shadow col-span-1 justify-self-center w-full">
             <CardHeader className="pb-2">
               <CardTitle>Rank Configuration</CardTitle>
               <CardDescription>
@@ -252,6 +169,176 @@ export default function Settings() {
                   </TabsContent>
                 ))}
               </Tabs>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-6">
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle>Storage Options</CardTitle>
+                <CardDescription>
+                  Choose where to store your game data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Tabs defaultValue={contextStorageType} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger
+                      value="local"
+                      onClick={() => handleStorageChange('local')}
+                      disabled={isLoading}
+                    >
+                      <HardDrive className="mr-2 h-4 w-4" />
+                      Local Storage
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="mongodb"
+                      onClick={() => handleStorageChange('mongodb')}
+                      disabled={isLoading}
+                    >
+                      <Database className="mr-2 h-4 w-4" />
+                      MongoDB
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="local" className="mt-4">
+                    <div className="space-y-2">
+                      <p className="text-sm">
+                        Data is stored in your browser's local storage. It will be available only on this device and browser.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Note: Clearing browser data will delete your game history.
+                      </p>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="mongodb" className="mt-4">
+                    <div className="space-y-2">
+                      <p className="text-sm">
+                        Data is stored in MongoDB. It will be available across devices when you're logged in.
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Note: Internet connection is required to access your data.
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle>Data Management</CardTitle>
+                <CardDescription>
+                  Manage your game data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Clear Game History</Label>
+                  <p className="text-sm text-muted-foreground">
+                    This will permanently delete your current game and history.
+                  </p>
+                  <Button
+                    variant={confirmClear ? "destructive" : "outline"}
+                    onClick={handleClearHistory}
+                    className="mt-2"
+                  >
+                    {confirmClear ? (
+                      <>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Confirm Clear History
+                      </>
+                    ) : (
+                      "Clear History"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>
+                Customize how the app looks
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="dark-mode">Dark Mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Switch between light and dark mode
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Sun className="h-4 w-4 text-muted-foreground" />
+                  <Switch
+                    id="dark-mode"
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                  />
+                  <Moon className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle>Default Players</CardTitle>
+              <CardDescription>
+                Manage your list of default players for quick game setup
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Enter player name"
+                    value={newPlayerName}
+                    onChange={(e) => setNewPlayerName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddDefaultPlayer();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  onClick={handleAddDefaultPlayer}
+                  disabled={!newPlayerName.trim()}
+                >
+                  Add Player
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {defaultPlayers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No default players added yet.</p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                    {[...defaultPlayers]
+                      .sort((a, b) => a.localeCompare(b))
+                      .map((player, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-muted rounded-md"
+                      >
+                        <span className="truncate">{player}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveDefaultPlayer(index)}
+                          className="h-8 w-8 ml-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
