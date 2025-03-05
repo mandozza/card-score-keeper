@@ -6,10 +6,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuHeight, setMenuHeight] = useState<number | undefined>(0);
 
@@ -25,12 +27,36 @@ export function Header() {
     }
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (pathname === '/') {
+        const titleElement = document.querySelector('h1');
+        if (titleElement) {
+          const titlePosition = titleElement.getBoundingClientRect().top;
+          setShowTitle(titlePosition < 100);
+        }
+      }
+    };
+
+    if (pathname === '/') {
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    } else {
+      setShowTitle(true);
+    }
+  }, [pathname]);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="mr-8 flex items-center space-x-2">
-            <span className="font-bold text-lg">TallyJack</span>
+            <span className={cn(
+              "font-bold text-lg transition-opacity duration-200",
+              pathname === '/' ? (showTitle ? "opacity-100" : "opacity-0") : "opacity-100"
+            )}>
+              TallyJack
+            </span>
           </Link>
           <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
             <Link

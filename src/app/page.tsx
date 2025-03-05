@@ -23,7 +23,7 @@ export default function Home() {
     <MainLayout>
       <div className="container mx-auto px-4 py-12 md:py-16 lg:py-20">
         <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
-          <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
+          <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl transition-transform duration-200">
             TallyJack
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground">
