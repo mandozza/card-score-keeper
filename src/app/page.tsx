@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowRight, Plus, AlertCircle } from "lucide-react";
+import { ArrowRight, Plus, AlertCircle, Heart, Crown } from "lucide-react";
 import { CurrentGameCard } from "@/components/current-game-card";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useState, useEffect } from "react";
@@ -18,6 +18,15 @@ export default function Home() {
   }, []);
 
   const hasActiveGame = isClient && currentGame && currentGame.isActive;
+
+  const getGameTypeIcon = () => {
+    if (!currentGame) return null;
+    return currentGame.gameType === 'hearts' ? (
+      <Heart className="h-5 w-5 text-red-500" />
+    ) : (
+      <Crown className="h-5 w-5 text-yellow-500" />
+    );
+  };
 
   return (
     <MainLayout>
@@ -34,7 +43,7 @@ export default function Home() {
               <Card className="shadow-sm hover:shadow-md transition-shadow bg-muted/50 border-primary/20 mb-4">
                 <CardHeader className="py-4">
                   <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5" />
+                    {getGameTypeIcon()}
                     Active Game in Progress
                   </CardTitle>
                   <CardDescription>
