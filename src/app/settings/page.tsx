@@ -27,6 +27,7 @@ export default function Settings() {
   const [rankConfigs, setRankConfigs] = useState<PlayerRankConfigs>(defaultRankConfigs);
   const [defaultPlayers, setDefaultPlayers] = useState<string[]>([]);
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [presidentAlias, setPresidentAlias] = useState('President');
 
   // Sync storage type from context to game store
   useEffect(() => {
@@ -40,6 +41,14 @@ export default function Settings() {
     const savedConfigs = localStorage.getItem('rankConfigs');
     if (savedConfigs) {
       setRankConfigs(JSON.parse(savedConfigs));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load president alias from localStorage
+    const savedAlias = localStorage.getItem('presidentAlias');
+    if (savedAlias) {
+      setPresidentAlias(savedAlias);
     }
   }, []);
 
@@ -256,7 +265,7 @@ export default function Settings() {
             </Card>
           </div>
 
-          <Card className="shadow-sm hover:shadow-md transition-shadow md:col-span-2">
+          <Card className="shadow-sm hover:shadow-md transition-shadow col-span-1">
             <CardHeader className="pb-2">
               <CardTitle>Appearance</CardTitle>
               <CardDescription>
@@ -279,6 +288,39 @@ export default function Settings() {
                     onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
                   />
                   <Moon className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm hover:shadow-md transition-shadow col-span-1">
+            <CardHeader className="pb-2">
+              <CardTitle>Game Title</CardTitle>
+              <CardDescription>
+                Choose how you want to refer to the highest rank
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                <div className="flex gap-8">
+                  {['President', 'Scum', 'Asshole'].map((alias) => (
+                    <div key={alias} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id={alias.toLowerCase()}
+                        name="presidentAlias"
+                        value={alias}
+                        checked={presidentAlias === alias}
+                        onChange={(e) => {
+                          setPresidentAlias(e.target.value);
+                          localStorage.setItem('presidentAlias', e.target.value);
+                          toast.success(`Game title changed to ${e.target.value}`);
+                        }}
+                        className="text-primary"
+                      />
+                      <Label htmlFor={alias.toLowerCase()}>{alias}</Label>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
