@@ -5,11 +5,13 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGameStore } from "@/lib/store/gameStore";
-import { ArrowRight, Calendar, Users, PlayCircle } from "lucide-react";
+import { ArrowRight, Calendar, Users, PlayCircle, ArrowLeft, Heart, Crown } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function History() {
   const { recentGames, currentGame } = useGameStore();
+  const router = useRouter();
 
   // Filter out current game from recent games to avoid duplicate keys
   const filteredRecentGames = recentGames.filter(game => game.id !== currentGame?.id);
@@ -35,7 +37,12 @@ export default function History() {
       <Card key={game.id} className={`shadow-sm hover:shadow-md transition-shadow ${isCurrentGame ? 'border-primary border-2' : ''}`}>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {game.gameType === 'hearts' ? (
+                <Heart className="h-5 w-5 text-red-500" />
+              ) : (
+                <Crown className="h-5 w-5 text-yellow-500" />
+              )}
               {getDisplayGameType(game.gameType)}
             </CardTitle>
             {isCurrentGame && (
