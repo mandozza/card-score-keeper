@@ -5,7 +5,7 @@ import { useGameStore } from '@/lib/store/gameStore';
 import { useStorage } from '@/lib/store/storageProvider';
 
 export function StorageInitializer() {
-  const { loadGamesFromStorage, setStorageType, currentGame } = useGameStore();
+  const { loadGamesFromStorage, setStorageType } = useGameStore();
   const { storageType, isLoading } = useStorage();
 
   useEffect(() => {

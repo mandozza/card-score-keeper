@@ -124,7 +124,7 @@ export const useGameStore = create<GameState>()(
           : null
       })),
 
-      endGame: (winnerId) => {
+      endGame: () => {
         const state = get();
         if (!state.currentGame) return;
 

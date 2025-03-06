@@ -1,4 +1,4 @@
-import { Game } from './gameStore';
+import { Game } from '@/lib/store/gameStore';
 
 // Interface for storage adapters
 export interface StorageAdapter {
@@ -29,7 +29,10 @@ export class LocalStorageAdapter implements StorageAdapter {
       console.log('[LocalStorageAdapter] Games parsed from storage:', games);
 
       // Convert date strings to Date objects
-      const gamesWithDates = games.map((game: any) => ({
+      const gamesWithDates = games.map((game: Omit<Game, 'createdAt' | 'updatedAt'> & {
+        createdAt: string | Date;
+        updatedAt: string | Date;
+      }) => ({
         ...game,
         createdAt: new Date(game.createdAt),
         updatedAt: new Date(game.updatedAt)

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "next-themes";
@@ -21,7 +21,7 @@ import { transformRankText } from "@/lib/utils";
 
 export default function Settings() {
   const { theme, setTheme } = useTheme();
-  const { recentGames, clearCurrentGame, setStorageType, storageType, loadGamesFromStorage } = useGameStore();
+  const { clearCurrentGame, setStorageType, storageType, loadGamesFromStorage } = useGameStore();
   const { storageType: contextStorageType, setStorageType: setContextStorageType } = useStorage();
   const [confirmClear, setConfirmClear] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -213,7 +213,7 @@ export default function Settings() {
                   <TabsContent value="local" className="mt-4">
                     <div className="space-y-2">
                       <p className="text-sm">
-                        Data is stored in your browser's local storage. It will be available only on this device and browser.
+                        Data is stored in your browser&apos;s local storage. It will be available only on this device and browser.
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Note: Clearing browser data will delete your game history.
@@ -226,7 +226,7 @@ export default function Settings() {
                         MongoDB storage is temporarily disabled.
                       </p>
                       <p className="text-sm">
-                        Data is stored in MongoDB. It will be available across devices when you're logged in.
+                        Data is stored in MongoDB. It will be available across devices when you&apos;re logged in.
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Note: Internet connection is required to access your data.

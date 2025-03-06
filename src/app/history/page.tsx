@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGameStore } from "@/lib/store/gameStore";
-import { ArrowRight, Calendar, Users, PlayCircle, ArrowLeft, Heart, Crown } from "lucide-react";
+import { ArrowRight, Calendar, Users, PlayCircle, Heart, Crown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 export default function History() {
   const { recentGames, currentGame } = useGameStore();
-  const router = useRouter();
 
   // Filter out current game from recent games to avoid duplicate keys
   const filteredRecentGames = recentGames.filter(game => game.id !== currentGame?.id);
@@ -113,7 +110,7 @@ export default function History() {
           <div className="rounded-lg border p-8 text-center mx-auto max-w-2xl">
             <h2 className="mb-2 text-xl font-semibold">No Game History</h2>
             <p className="mb-4 text-muted-foreground">
-              You haven't played any games yet. Start a new game to see your history.
+              You haven&apos;t played any games yet. Start a new game to see your history.
             </p>
             <Button asChild>
               <Link href="/game/new">Start New Game</Link>

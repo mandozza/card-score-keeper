@@ -8,10 +8,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle, ClipboardList, PlusCircle, StickyNote, Crown } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Edit, User, Shuffle, ClipboardList, PlusCircle, StickyNote, Crown } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
@@ -180,12 +180,6 @@ export default function GameDetail() {
     }
   };
 
-  // Update to set the default winner when opening the dialog
-  const handleOpenEndGameDialog = () => {
-    setWinner(getDefaultWinner());
-    setShowEndGameDialog(true);
-  };
-
   if (!game) {
     return (
       <MainLayout>
@@ -214,12 +208,6 @@ export default function GameDetail() {
 
   const totalScores = calculateTotalScores();
 
-  const handleScoreChange = (playerId: string, value: string) => {
-    setNewRound({
-      ...newRound,
-      [playerId]: value === "" ? 0 : parseInt(value, 10),
-    });
-  };
 
   // Add handler for editing round score changes
   const handleEditScoreChange = (playerId: string, value: string) => {

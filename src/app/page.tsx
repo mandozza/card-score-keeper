@@ -2,9 +2,9 @@
 
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowRight, Plus, AlertCircle, Heart, Crown, ClipboardList, History, StickyNote } from "lucide-react";
+import { ArrowRight, Plus, Heart, Crown, ClipboardList, History, StickyNote } from "lucide-react";
 import { CurrentGameCard } from "@/components/current-game-card";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useState, useEffect } from "react";
@@ -95,7 +95,7 @@ export default function Home() {
               </div>
             </CardHeader>
             <CardContent>
-              <p>Easily input scores for each player after every round. The app automatically calculates totals and shows who's winning.</p>
+              <p>Easily input scores for each player after every round. The app automatically calculates totals and shows who&apos;s winning.</p>
             </CardContent>
           </Card>
 

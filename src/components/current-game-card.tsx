@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useGameStore } from "@/lib/store/gameStore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Heart, Crown, Target, Clock, Trophy, Users, Calendar } from "lucide-react";
+import { ArrowRight, Heart, Crown, Target, Trophy, Users, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,7 @@ console.log('CURRENT GAME CARD');
     try {
       const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
       return date.toLocaleDateString();
-    } catch (e) {
+    } catch {
       return 'Invalid date';
     }
   };
@@ -52,7 +52,7 @@ console.log('CURRENT GAME CARD');
     try {
       const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
       return date.toLocaleString();
-    } catch (e) {
+    } catch {
       return 'Invalid date';
     }
   };
