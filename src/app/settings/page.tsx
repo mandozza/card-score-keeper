@@ -204,7 +204,7 @@ export default function Settings() {
                     <TabsTrigger
                       value="mongodb"
                       onClick={() => handleStorageChange('mongodb')}
-                      disabled={isLoading}
+                      disabled={true}
                     >
                       <Database className="mr-2 h-4 w-4" />
                       MongoDB
@@ -222,6 +222,9 @@ export default function Settings() {
                   </TabsContent>
                   <TabsContent value="mongodb" className="mt-4">
                     <div className="space-y-2">
+                      <p className="text-sm text-red-500">
+                        MongoDB storage is temporarily disabled.
+                      </p>
                       <p className="text-sm">
                         Data is stored in MongoDB. It will be available across devices when you're logged in.
                       </p>
