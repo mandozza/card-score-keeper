@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { ArrowRight, Plus, AlertCircle, Heart, Crown } from "lucide-react";
+import { ArrowRight, Plus, AlertCircle, Heart, Crown, ClipboardList, History, StickyNote } from "lucide-react";
 import { CurrentGameCard } from "@/components/current-game-card";
 import { useGameStore } from "@/lib/store/gameStore";
 import { useState, useEffect } from "react";
@@ -85,11 +85,14 @@ export default function Home() {
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mx-auto max-w-7xl mt-16">
           <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Track Scores</CardTitle>
-              <CardDescription>
-                Keep track of scores round by round
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start gap-4 pb-2">
+              <ClipboardList className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <CardTitle>Track Scores</CardTitle>
+                <CardDescription>
+                  Keep track of scores round by round
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <p>Easily input scores for each player after every round. The app automatically calculates totals and shows who's winning.</p>
@@ -97,11 +100,14 @@ export default function Home() {
           </Card>
 
           <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Game History</CardTitle>
-              <CardDescription>
-                Review past games and performance
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start gap-4 pb-2">
+              <History className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <CardTitle>Game History</CardTitle>
+                <CardDescription>
+                  Review past games and performance
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <p>Access your game history to see who won previous games, review scores, and track player performance over time.</p>
@@ -109,11 +115,14 @@ export default function Home() {
           </Card>
 
           <Card className="shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle>Game Notes</CardTitle>
-              <CardDescription>
-                Add notes to games and rounds
-              </CardDescription>
+            <CardHeader className="flex flex-row items-start gap-4 pb-2">
+              <StickyNote className="h-10 w-10 text-muted-foreground" />
+              <div>
+                <CardTitle>Game Notes</CardTitle>
+                <CardDescription>
+                  Add notes to games and rounds
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               <p>Record special events, debts, or penalties with the built-in notes feature for both games and individual rounds.</p>

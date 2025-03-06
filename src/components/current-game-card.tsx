@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useGameStore } from "@/lib/store/gameStore";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Heart, Crown, Target, Clock, Trophy, Users } from "lucide-react";
+import { ArrowRight, Heart, Crown, Target, Clock, Trophy, Users, Calendar } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -90,12 +90,20 @@ console.log('CURRENT GAME CARD');
             )}
             Current Game: {getDisplayGameType(currentGame.gameType)}
           </span>
-          <span className="text-sm font-normal text-muted-foreground">
+          <span className="text-sm font-normal text-muted-foreground flex items-center gap-1.5">
+            <Calendar className="h-4 w-4" />
             {formatDate(currentGame.createdAt)}
           </span>
         </CardTitle>
-        <CardDescription>
-          {currentGame.players.length} players • {currentGame.rounds.length} rounds played
+        <CardDescription className="flex items-center gap-4 mt-2">
+          <span className="flex items-center gap-1.5">
+            <Users className="h-4 w-4" />
+            {currentGame.players.length} players
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Target className="h-4 w-4" />
+            {currentGame.rounds.length} rounds
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
@@ -110,10 +118,10 @@ console.log('CURRENT GAME CARD');
                 {playerTotals.map(({ player, totalScore }) => (
                   <li key={player.id} className="flex justify-between items-center">
                     <span className="flex items-center gap-2">
+                      <span>{player.name}</span>
                       {player === leadingPlayer?.player && (
                         <Trophy className="h-3 w-3 text-yellow-500" />
                       )}
-                      <span>{player.name}</span>
                     </span>
                     <span className={cn(
                       "font-medium px-2 py-0.5 rounded text-sm",

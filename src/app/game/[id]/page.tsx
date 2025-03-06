@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle, ClipboardList, PlusCircle, StickyNote } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
@@ -560,19 +560,33 @@ export default function GameDetail() {
           <div className="md:col-span-2">
             <Tabs defaultValue="scoreboard" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="scoreboard">Scoreboard</TabsTrigger>
-                {game.isActive && <TabsTrigger value="add-round">Add Round</TabsTrigger>}
-                <TabsTrigger value="notes">Notes</TabsTrigger>
+                <TabsTrigger value="scoreboard" className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Scoreboard
+                </TabsTrigger>
+                {game.isActive && (
+                  <TabsTrigger value="add-round" className="flex items-center gap-2">
+                    <PlusCircle className="h-4 w-4" />
+                    Add Round
+                  </TabsTrigger>
+                )}
+                <TabsTrigger value="notes" className="flex items-center gap-2">
+                  <StickyNote className="h-4 w-4" />
+                  Notes
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="scoreboard" className="mt-3 md:mt-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Scoreboard</CardTitle>
-                    <CardDescription>
-                      Game ends at {game.endScore} points
-                      {game.gameType === "hearts" && " (lowest score wins)"}
-                    </CardDescription>
+                  <CardHeader className="flex flex-row items-start gap-4">
+                    <ClipboardList className="h-10 w-10 text-muted-foreground" />
+                    <div>
+                      <CardTitle>Scoreboard</CardTitle>
+                      <CardDescription>
+                        Game ends at {game.endScore} points
+                        {game.gameType === "hearts" && " (lowest score wins)"}
+                      </CardDescription>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
@@ -654,11 +668,14 @@ export default function GameDetail() {
               {game.isActive && (
                 <TabsContent value="add-round" className="mt-3 md:mt-4">
                   <Card>
-                    <CardHeader>
-                      <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
-                      <CardDescription>
-                        Select the rank for each player
-                      </CardDescription>
+                    <CardHeader className="flex flex-row items-start gap-4">
+                      <PlusCircle className="h-10 w-10 text-muted-foreground" />
+                      <div>
+                        <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
+                        <CardDescription>
+                          Select the rank for each player
+                        </CardDescription>
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {game.players.map((player) => (
@@ -716,11 +733,14 @@ export default function GameDetail() {
 
               <TabsContent value="notes" className="mt-3 md:mt-4">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Game Notes</CardTitle>
-                    <CardDescription>
-                      Add notes about the game
-                    </CardDescription>
+                  <CardHeader className="flex flex-row items-start gap-4">
+                    <StickyNote className="h-10 w-10 text-muted-foreground" />
+                    <div>
+                      <CardTitle>Game Notes</CardTitle>
+                      <CardDescription>
+                        Add notes about the game
+                      </CardDescription>
+                    </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
