@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle, ClipboardList, PlusCircle, StickyNote } from "lucide-react";
+import { Plus, Save, Trophy, ArrowLeft, Trash2, Edit, User, Shuffle, ClipboardList, PlusCircle, StickyNote, Crown } from "lucide-react";
 import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
@@ -599,18 +599,18 @@ export default function GameDetail() {
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-2">
                                     <span className="capitalize">{player.name}</span>
+                                    {player.rank && (
+                                      <span className="text-xs text-muted-foreground font-normal">
+                                        {transformRankText(player.rank)}
+                                      </span>
+                                    )}
+                                    {player.rank === 'President' && (
+                                      <Crown className="h-4 w-4 text-yellow-500" />
+                                    )}
                                     {player.id === getDefaultWinner() && (
                                       <Trophy className="h-4 w-4 text-yellow-500" />
                                     )}
-                                    {player.rank === 'President' && (
-                                      <span role="img" aria-label="crown">👑</span>
-                                    )}
                                   </div>
-                                  {player.rank && (
-                                    <span className="text-xs text-muted-foreground font-normal">
-                                      {transformRankText(player.rank)}
-                                    </span>
-                                  )}
                                 </div>
                               </th>
                             ))}
@@ -847,8 +847,11 @@ export default function GameDetail() {
                           <span className="capitalize">{player.name}</span>
                           {player.rank && (
                             <span className="text-xs text-muted-foreground">
-                              ({transformRankText(player.rank)}) {player.rank === 'President' && '👑'}
+                              ({transformRankText(player.rank)})
                             </span>
+                          )}
+                          {player.rank === 'President' && (
+                            <Crown className="h-4 w-4 text-yellow-500" />
                           )}
                           {player.id === getDefaultWinner() && (
                             <Trophy className="h-4 w-4 text-yellow-500" />
