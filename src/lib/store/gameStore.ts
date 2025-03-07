@@ -243,7 +243,16 @@ export const useGameStore = create<GameState>()(
     }),
     {
       name: 'card-score-keeper-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined') {
+          return localStorage;
+        }
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {}
+        };
+      }),
       partialize: (state) => ({
         currentGame: state.currentGame ? {
           ...state.currentGame,

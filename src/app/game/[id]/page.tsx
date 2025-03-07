@@ -503,7 +503,7 @@ export default function GameDetail() {
             Back
           </Button>
           <h1 className="text-3xl font-bold capitalize">
-            {game.gameType === 'president' ? localStorage.getItem('presidentAlias') || 'President' : game.gameType}
+            {game.gameType === 'president' ? (typeof window !== 'undefined' ? localStorage.getItem('presidentAlias') || 'President' : 'President') : game.gameType}
           </h1>
         </div>
 

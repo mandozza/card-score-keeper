@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function transformRankText(rank: string): string {
-  const presidentAlias = localStorage.getItem('presidentAlias') || 'President';
+  const presidentAlias = typeof window !== 'undefined' ? localStorage.getItem('presidentAlias') || 'President' : 'President';
   if (presidentAlias === 'Asshole') {
     if (rank === 'Scum') return 'Asshole';
     if (rank === 'Vice Scum') return 'Vice Asshole';

@@ -18,16 +18,20 @@ export const StorageProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Load storage preference from localStorage
-    const savedStorageType = localStorage.getItem('preferred-storage-type');
-    if (savedStorageType && (savedStorageType === 'local' || savedStorageType === 'mongodb')) {
-      setStorageType(savedStorageType as StorageType);
+    if (typeof window !== 'undefined') {
+      const savedStorageType = localStorage.getItem('preferred-storage-type');
+      if (savedStorageType && (savedStorageType === 'local' || savedStorageType === 'mongodb')) {
+        setStorageType(savedStorageType as StorageType);
+      }
     }
     setIsLoading(false);
   }, []);
 
   const handleSetStorageType = (type: StorageType) => {
     setStorageType(type);
-    localStorage.setItem('preferred-storage-type', type);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred-storage-type', type);
+    }
   };
 
   return (

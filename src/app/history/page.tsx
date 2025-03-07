@@ -26,7 +26,7 @@ export default function History() {
   const renderGameCard = (game: Game, isCurrentGame = false) => {
     const getDisplayGameType = (gameType: string) => {
       if (gameType === 'president') {
-        return localStorage.getItem('presidentAlias') || 'President';
+        return typeof window !== 'undefined' ? localStorage.getItem('presidentAlias') || 'President' : 'President';
       }
       return gameType.charAt(0).toUpperCase() + gameType.slice(1);
     };
