@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useGameStore } from "@/lib/store/gameStore";
 import { ArrowRight, Calendar, Users, PlayCircle, Heart, Crown } from "lucide-react";
 import Link from "next/link";
+import { Game } from "@/lib/store/gameStore";
 
 export default function History() {
   const { recentGames, currentGame } = useGameStore();
@@ -22,7 +23,7 @@ export default function History() {
   };
 
   // Function to render a game card
-  const renderGameCard = (game, isCurrentGame = false) => {
+  const renderGameCard = (game: Game, isCurrentGame = false) => {
     const getDisplayGameType = (gameType: string) => {
       if (gameType === 'president') {
         return localStorage.getItem('presidentAlias') || 'President';
