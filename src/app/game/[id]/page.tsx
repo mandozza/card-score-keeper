@@ -581,29 +581,26 @@ export default function GameDetail() {
                       <table className="w-full border-collapse min-w-[400px]">
                         <thead>
                           <tr className="border-b">
-                            <th className="py-2 px-4 text-left font-medium">Round</th>
+                            <th className="py-2 px-4 text-left font-medium align-top">Round</th>
                             {game.players.map((player) => (
-                              <th key={player.id} className={`py-2 px-4 text-left font-medium ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
+                              <th key={player.id} className={`py-2 px-4 text-left font-medium align-top ${player.id === getDefaultWinner() ? 'bg-yellow-500/5' : ''}`}>
                                 <div className="flex flex-col">
                                   <div className="flex items-center gap-2">
                                     <span className="capitalize">{player.name}</span>
-                                    {player.rank && (
-                                      <span className="text-xs text-muted-foreground font-normal">
-                                        {transformRankText(player.rank)}
-                                      </span>
-                                    )}
-                                    {player.rank === 'President' && (
-                                      <Crown className="h-4 w-4 text-yellow-500" />
-                                    )}
                                     {player.id === getDefaultWinner() && (
                                       <Trophy className="h-4 w-4 text-yellow-500" />
                                     )}
                                   </div>
+                                  {player.rank && (
+                                    <span className="text-xs text-muted-foreground font-normal">
+                                      {transformRankText(player.rank)}
+                                    </span>
+                                  )}
                                 </div>
                               </th>
                             ))}
-                            <th className="py-2 px-4 text-left font-medium">Notes</th>
-                            {game.isActive && <th className="py-2 px-4 text-left font-medium">Actions</th>}
+                            <th className="py-2 px-4 text-left font-medium align-top">Notes</th>
+                            {game.isActive && <th className="py-2 px-4 text-left font-medium align-top">Actions</th>}
                           </tr>
                         </thead>
                         <tbody>
