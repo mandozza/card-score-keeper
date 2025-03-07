@@ -4,12 +4,17 @@ import Score from "@/lib/db/models/score";
 import Game from "@/lib/db/models/game";
 import mongoose from "mongoose";
 
+// Add this type for the route context
+type RouteContext = {
+  params: { id: string }
+}
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
     const body = await request.json();
     const { note } = body;
 
@@ -66,10 +71,10 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
-    const { id } = params;
+    const { id } = context.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
