@@ -64,17 +64,12 @@ export async function POST(
   }
 }
 
-export async function GET(
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: "Invalid game ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid game ID" }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -82,18 +77,12 @@ export async function GET(
     const score = await Score.findOne({ gameId: id });
 
     if (!score) {
-      return NextResponse.json(
-        { error: "No notes found for this game" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "No notes found for this game" }, { status: 404 });
     }
 
     return NextResponse.json({ notes: score.notes });
   } catch (error) {
     console.error("Error fetching notes:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notes" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch notes" }, { status: 500 });
   }
 }
