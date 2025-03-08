@@ -220,6 +220,15 @@ export default function GameDetail() {
 
   const handleAddRound = () => {
     const roundNumber = game.rounds.length + 1;
+
+    // For President game, validate that all ranks are selected
+    if (game.gameType === "president") {
+      if (Object.values(roundRanks).some(rank => !rank)) {
+        toast.error("Please select a rank for each player");
+        return;
+      }
+    }
+
     const playerScores: PlayerScore[] = Object.entries(newRound).map(
       ([playerId, score]) => ({
         playerId,
@@ -686,7 +695,9 @@ export default function GameDetail() {
                       <div>
                         <CardTitle>Add Round {game.rounds.length + 1}</CardTitle>
                         <CardDescription>
-                          Select the rank for each player
+                          {game.gameType === "hearts"
+                            ? "Enter the points for each player"
+                            : "Select the rank for each player"}
                         </CardDescription>
                       </div>
                     </CardHeader>
@@ -696,23 +707,44 @@ export default function GameDetail() {
                           <Label htmlFor={`rank-${player.id}`} className="w-full sm:w-24">
                             {player.name}
                           </Label>
-                          <select
-                            id={`rank-${player.id}`}
-                            value={roundRanks[player.id] || ''}
-                            onChange={(e) => handleRankChange(player.id, e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="">Select rank...</option>
-                            {getRankOptions(game.players.length).map((rank) => (
-                              <option
-                                key={rank}
-                                value={rank}
-                                disabled={isRankTaken(rank) && roundRanks[player.id] !== rank}
-                              >
-                                {transformRankText(rank)} ({calculatePointsFromRank(rank, game.players.length)} pts)
-                              </option>
-                            ))}
-                          </select>
+
+                          {game.gameType === "hearts" ? (
+                            <Input
+                              id={`score-${player.id}`}
+                              type="number"
+                              min="0"
+                              max="26"
+                              value={newRound[player.id] || ""}
+                              onChange={(e) => {
+                                const value = e.target.value === "" ? 0 : parseInt(e.target.value, 10);
+                                setNewRound({
+                                  ...newRound,
+                                  [player.id]: value
+                                });
+                              }}
+                              placeholder="Enter points"
+                              className="flex h-10 w-full"
+                            />
+                          ) : (
+                            <select
+                              id={`rank-${player.id}`}
+                              value={roundRanks[player.id] || ''}
+                              onChange={(e) => handleRankChange(player.id, e.target.value)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <option value="">Select rank...</option>
+                              {getRankOptions(game.players.length).map((rank) => (
+                                <option
+                                  key={rank}
+                                  value={rank}
+                                  disabled={isRankTaken(rank) && roundRanks[player.id] !== rank}
+                                >
+                                  {transformRankText(rank)} ({calculatePointsFromRank(rank, game.players.length)} pts)
+                                </option>
+                              ))}
+                            </select>
+                          )}
+
                           <div className="text-sm text-muted-foreground w-20 text-right">
                             {newRound[player.id] || 0} points
                           </div>
@@ -731,10 +763,37 @@ export default function GameDetail() {
                       </div>
                     </CardContent>
                     <CardFooter>
+                      {game.gameType === "hearts" && (
+                        <div className="mr-auto text-sm">
+                          Total: {Object.values(newRound).reduce((sum, score) => sum + score, 0)} points
+                          {(() => {
+                            const totalPoints = Object.values(newRound).reduce((sum, score) => sum + score, 0);
+                            const shootTheMoonPoints = (game.players.length - 1) * 26;
+
+                            if (totalPoints === 26) {
+                              return <span className="ml-2 text-green-500">✓ Valid Score!</span>;
+                            } else if (totalPoints === shootTheMoonPoints) {
+                              return <span className="ml-2 text-green-500">✓ Shoot the Moon</span>;
+                            } else if (totalPoints < 26) {
+                              return <span className="ml-2 text-yellow-500">{26 - totalPoints} points remaining</span>;
+                            } else {
+                              return <span className="ml-2 text-red-500">Invalid total</span>;
+                            }
+                          })()}
+                        </div>
+                      )}
                       <Button
                         onClick={handleAddRound}
                         className="ml-auto gap-2"
-                        disabled={Object.values(roundRanks).some(rank => !rank)}
+                        disabled={
+                          game.gameType === "president"
+                            ? Object.values(roundRanks).some(rank => !rank)
+                            : game.gameType === "hearts" && (() => {
+                                const totalPoints = Object.values(newRound).reduce((sum, score) => sum + score, 0);
+                                const shootTheMoonPoints = (game.players.length - 1) * 26;
+                                return totalPoints !== 26 && totalPoints !== shootTheMoonPoints;
+                              })()
+                        }
                       >
                         <Save className="h-4 w-4" />
                         Save Round
@@ -934,7 +993,9 @@ export default function GameDetail() {
           <DialogHeader>
             <DialogTitle>Edit Round {editingRound?.roundNumber}</DialogTitle>
             <DialogDescription>
-              Update scores for each player
+              {game.gameType === "hearts"
+                ? "Update points for each player"
+                : "Update scores for each player"}
             </DialogDescription>
           </DialogHeader>
 
@@ -969,10 +1030,40 @@ export default function GameDetail() {
           </div>
 
           <DialogFooter>
+            {game.gameType === "hearts" && (
+              <div className="mr-auto text-sm">
+                Total: {Object.values(editRoundData).reduce((sum, score) => sum + score, 0)} points
+                {(() => {
+                  const totalPoints = Object.values(editRoundData).reduce((sum, score) => sum + score, 0);
+                  const shootTheMoonPoints = (game.players.length - 1) * 26;
+
+                  if (totalPoints === 26) {
+                    return <span className="ml-2 text-green-500">✓ Valid</span>;
+                  } else if (totalPoints === shootTheMoonPoints) {
+                    return <span className="ml-2 text-green-500">✓ Shoot the Moon</span>;
+                  } else if (totalPoints < 26) {
+                    return <span className="ml-2 text-yellow-500">{26 - totalPoints} points remaining</span>;
+                  } else {
+                    return <span className="ml-2 text-red-500">Invalid total</span>;
+                  }
+                })()}
+              </div>
+            )}
             <Button variant="outline" onClick={() => setShowEditRoundDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveEditedRound}>Save Changes</Button>
+            <Button
+              onClick={handleSaveEditedRound}
+              disabled={
+                game.gameType === "hearts" && (() => {
+                  const totalPoints = Object.values(editRoundData).reduce((sum, score) => sum + score, 0);
+                  const shootTheMoonPoints = (game.players.length - 1) * 26;
+                  return totalPoints !== 26 && totalPoints !== shootTheMoonPoints;
+                })()
+              }
+            >
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
