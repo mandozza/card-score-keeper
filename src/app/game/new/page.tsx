@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Trash2, ArrowRight, UserPlus, Check, Heart, Crown, Users } from "lucide-react";
+import { Plus, Trash2, ArrowRight, UserPlus, Check, Heart, Crown, Users, Settings } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function NewGame() {
@@ -95,6 +95,11 @@ export default function NewGame() {
     setPlayers([...players, ...playersToAdd]);
     setSelectedDefaultPlayers([]);
     toast.success(`Added ${newPlayers.length} player${newPlayers.length > 1 ? 's' : ''}`);
+
+    // Hide the default players section with a slight delay for animation
+    setTimeout(() => {
+      setShowDefaultPlayers(false);
+    }, 300);
   };
 
   const handleAddDefaultPlayer = (playerName: string) => {
@@ -288,7 +293,7 @@ export default function NewGame() {
               <div className="flex items-center justify-between">
                 <Label>Players</Label>
                 <div className="flex gap-2">
-                  {defaultPlayers.length > 0 && (
+
                     <Button
                       type="button"
                       variant="outline"
@@ -303,7 +308,7 @@ export default function NewGame() {
                       <Users className="mr-2 h-4 w-4" />
                       {showDefaultPlayers ? "Hide Default Players" : "Add Default Players"}
                     </Button>
-                  )}
+
                   <Button
                     type="button"
                     variant="outline"
@@ -316,60 +321,76 @@ export default function NewGame() {
                 </div>
               </div>
 
-              {showDefaultPlayers && defaultPlayers.length > 0 && (
-                <div className="p-3 bg-muted rounded-md">
+              {showDefaultPlayers && (
+                <div className="p-3 bg-muted rounded-md animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex flex-col space-y-2 mb-3">
                     <h3 className="text-sm font-medium">Default Players</h3>
                     <p className="text-xs text-muted-foreground">
-                      Select players from the list below, then click "Add to Game" to include them.
+                      {defaultPlayers.length > 0
+                        ? "Select players from the list below, then click \"Add to Game\" to include them."
+                        : "You don't have any default players saved yet. You can add default players in the settings page."}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {defaultPlayers.map((player) => {
-                      const isAlreadyInGame = players.some(p => p.name.toLowerCase() === player.toLowerCase());
-                      return (
-                        <div
-                          key={player}
-                          className={`flex items-center p-2 rounded-md ${isAlreadyInGame ? 'bg-secondary/30' : 'hover:bg-secondary/10'}`}
+
+                  {defaultPlayers.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {defaultPlayers.map((player) => {
+                          const isAlreadyInGame = players.some(p => p.name.toLowerCase() === player.toLowerCase());
+                          return (
+                            <div
+                              key={player}
+                              className={`flex items-center p-2 rounded-md ${isAlreadyInGame ? 'bg-secondary/30' : 'hover:bg-secondary/10'}`}
+                            >
+                              <Checkbox
+                                id={`select-${player}`}
+                                checked={selectedDefaultPlayers.includes(player)}
+                                onCheckedChange={() => !isAlreadyInGame && handleToggleSelectDefaultPlayer(player)}
+                                disabled={isAlreadyInGame}
+                                className="mr-2"
+                              />
+                              <Label
+                                htmlFor={`select-${player}`}
+                                className={`text-sm flex-1 cursor-pointer ${isAlreadyInGame ? 'text-muted-foreground line-through' : ''}`}
+                              >
+                                {player}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <Button
+                          type="button"
+                          variant="default"
+                          onClick={handleAddSelectedDefaultPlayers}
+                          disabled={selectedDefaultPlayers.length === 0}
+                          className="w-full sm:w-auto font-medium shadow-sm hover:shadow-md transition-all"
                         >
-                          <Checkbox
-                            id={`select-${player}`}
-                            checked={selectedDefaultPlayers.includes(player)}
-                            onCheckedChange={() => !isAlreadyInGame && handleToggleSelectDefaultPlayer(player)}
-                            disabled={isAlreadyInGame}
-                            className="mr-2"
-                          />
-                          <Label
-                            htmlFor={`select-${player}`}
-                            className={`text-sm flex-1 cursor-pointer ${isAlreadyInGame ? 'text-muted-foreground line-through' : ''}`}
-                          >
-                            {player}
-                          </Label>
-                          {isAlreadyInGame && (
-                            <span className="text-xs text-muted-foreground">Added</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleAddSelectedDefaultPlayers}
-                      disabled={selectedDefaultPlayers.length === 0}
-                      className="w-full sm:w-auto"
-                    >
-                      Add to Game ({selectedDefaultPlayers.length} player{selectedDefaultPlayers.length !== 1 ? 's' : ''})
-                    </Button>
-                  </div>
+                          <Users className="mr-2 h-4 w-4" />
+                          Add to Game ({selectedDefaultPlayers.length} player{selectedDefaultPlayers.length !== 1 ? 's' : ''})
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex justify-center mt-4">
+                      <Button
+                        type="button"
+                        variant="default"
+                        onClick={() => router.push('/settings')}
+                        className="w-full sm:w-auto font-medium shadow-sm hover:shadow-md transition-all"
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        Go to Settings
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 
               {players.length === 0 ? (
                 <div className="p-8 border border-dashed rounded-md text-center">
-                  <p className="text-muted-foreground mb-4">No players added yet<br/>Choose from your default players or add a new player to get started.</p>
-
+                  <p className="text-sm text-muted-foreground mb-4">No players added yet<br/>Choose from your default players or add a new player to get started.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -382,16 +403,6 @@ export default function NewGame() {
                           handlePlayerNameChange(player.id, e.target.value)
                         }
                       />
-                      <div className="flex items-center gap-1">
-                        <Checkbox
-                          id={`default-${player.id}`}
-                          checked={player.isDefault}
-                          onCheckedChange={() => handleToggleDefaultPlayer(player.id)}
-                        />
-                        <Label htmlFor={`default-${player.id}`} className="text-xs whitespace-nowrap">
-                          Save as default
-                        </Label>
-                      </div>
                       <Button
                         type="button"
                         variant="ghost"
