@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Trash2, ArrowRight, UserPlus, Check, Heart, Crown, Users, Settings } from "lucide-react";
+import { Trash2, ArrowRight, UserPlus, Check, Heart, Crown, Users, Settings } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function NewGame() {
@@ -48,14 +47,6 @@ export default function NewGame() {
   const handlePlayerNameChange = (id: string, name: string) => {
     setPlayers(
       players.map((player) => (player.id === id ? { ...player, name, isDefault: player.isDefault } : player))
-    );
-  };
-
-  const handleToggleDefaultPlayer = (id: string) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === id ? { ...player, isDefault: !player.isDefault } : player
-      )
     );
   };
 
@@ -100,19 +91,6 @@ export default function NewGame() {
     setTimeout(() => {
       setShowDefaultPlayers(false);
     }, 300);
-  };
-
-  const handleAddDefaultPlayer = (playerName: string) => {
-    // Check if this player is already in the list
-    const existingPlayer = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
-
-    if (existingPlayer) {
-      toast.info(`${playerName} is already in the game`);
-      return;
-    }
-
-    // Add the default player to the current game
-    setPlayers([...players, { id: uuidv4(), name: playerName, isDefault: true }]);
   };
 
   const handleStartGame = () => {
