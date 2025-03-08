@@ -506,7 +506,7 @@ export default function GameDetail() {
   };
 
   // Add this section after the loading check and before the return statement
-  const showAssignRanksButton = game && game.rounds.length === 0;
+  const showAssignRanksButton = game && game.rounds.length === 0 && game.gameType !== "hearts";
 
   const handleAssignRanks = () => {
     assignRandomRanks();
