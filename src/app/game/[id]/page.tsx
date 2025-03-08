@@ -16,6 +16,7 @@ import { Game, Player, PlayerScore, Round } from "@/lib/store/gameStore";
 import dynamic from "next/dynamic";
 import { defaultRankConfigs, PlayerRankConfigs } from "@/types/ranks";
 import { transformRankText } from "@/lib/utils";
+import { getStorageAdapter } from "@/lib/store/storageAdapters";
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false });
 
@@ -405,9 +406,36 @@ export default function GameDetail() {
   };
 
   const handleAddGameNote = () => {
-    if (!gameNote.trim()) return;
+    if (!gameNote.trim() || !game) return;
 
-    addNote(gameNote);
+    // For current game, use the store's addNote function
+    if (currentGame && currentGame.id === game.id) {
+      addNote(gameNote);
+    } else {
+      // For past games, update the game directly
+      const updatedGame: Game = {
+        ...game,
+        notes: [...game.notes, gameNote],
+        updatedAt: new Date()
+      };
+
+      // Update local state
+      setGame(updatedGame);
+
+      // Update the game in storage
+      const { storageType } = useGameStore.getState();
+      const adapter = getStorageAdapter(storageType);
+      adapter.updateGame(game.id!, updatedGame)
+        .then(() => {
+          // Refresh the games list to include this update
+          useGameStore.getState().loadGamesFromStorage();
+        })
+        .catch((error: Error) => {
+          console.error('Error updating game note:', error);
+          toast.error('Failed to save note');
+        });
+    }
+
     setGameNote("");
     toast.success("Note added");
   };
@@ -498,7 +526,7 @@ export default function GameDetail() {
       )}
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="flex items-center justify-between mb-8">
-          <Button variant="ghost" onClick={() => router.push('/')} className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => router.push('/history')} className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>

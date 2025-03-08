@@ -12,9 +12,17 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const { currentGame } = useGameStore();
   const [isClient, setIsClient] = useState(false);
+  const [presidentAlias, setPresidentAlias] = useState('President');
 
   useEffect(() => {
     setIsClient(true);
+    // Load president alias from localStorage
+    if (typeof window !== 'undefined') {
+      const savedAlias = localStorage.getItem('presidentAlias');
+      if (savedAlias) {
+        setPresidentAlias(savedAlias);
+      }
+    }
   }, []);
 
   const hasActiveGame = isClient && currentGame && currentGame.isActive;
@@ -36,7 +44,7 @@ export default function Home() {
             TallyJack
           </h1>
           <p className="max-w-[700px] text-lg text-muted-foreground">
-            A digital scorekeeper for card games like Hearts and President.
+            A digital scorekeeper for card games like Hearts and {presidentAlias}.
           </p>
           <div className="flex flex-col items-center gap-4 mt-4">
             {hasActiveGame ? (
