@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import { useGameStore } from "@/lib/store/gameStore";
-import { Plus, Trash2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, ArrowRight, UserPlus, Check, Heart, Crown, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function NewGame() {
   const router = useRouter();
@@ -19,13 +20,21 @@ export default function NewGame() {
 
   const [gameType, setGameType] = useState("hearts");
   const [endScore, setEndScore] = useState(100);
-  const [players, setPlayers] = useState<{ id: string; name: string }[]>([
-    { id: uuidv4(), name: "" },
-    { id: uuidv4(), name: "" },
-  ]);
+  const [players, setPlayers] = useState<{ id: string; name: string; isDefault: boolean }[]>([]);
+  const [defaultPlayers, setDefaultPlayers] = useState<string[]>([]);
+  const [showDefaultPlayers, setShowDefaultPlayers] = useState(false);
+  const [selectedDefaultPlayers, setSelectedDefaultPlayers] = useState<string[]>([]);
+
+  // Load default players from localStorage
+  useEffect(() => {
+    const savedPlayers = localStorage.getItem('defaultPlayers');
+    if (savedPlayers) {
+      setDefaultPlayers(JSON.parse(savedPlayers));
+    }
+  }, []);
 
   const handleAddPlayer = () => {
-    setPlayers([...players, { id: uuidv4(), name: "" }]);
+    setPlayers([...players, { id: uuidv4(), name: "", isDefault: false }]);
   };
 
   const handleRemovePlayer = (id: string) => {
@@ -38,14 +47,83 @@ export default function NewGame() {
 
   const handlePlayerNameChange = (id: string, name: string) => {
     setPlayers(
-      players.map((player) => (player.id === id ? { ...player, name } : player))
+      players.map((player) => (player.id === id ? { ...player, name, isDefault: player.isDefault } : player))
     );
+  };
+
+  const handleToggleDefaultPlayer = (id: string) => {
+    setPlayers(
+      players.map((player) =>
+        player.id === id ? { ...player, isDefault: !player.isDefault } : player
+      )
+    );
+  };
+
+  const handleToggleSelectDefaultPlayer = (playerName: string) => {
+    setSelectedDefaultPlayers(prev => {
+      if (prev.includes(playerName)) {
+        return prev.filter(name => name !== playerName);
+      } else {
+        return [...prev, playerName];
+      }
+    });
+  };
+
+  const handleAddSelectedDefaultPlayers = () => {
+    if (selectedDefaultPlayers.length === 0) {
+      toast.error("No players selected");
+      return;
+    }
+
+    // Filter out players that are already in the game
+    const newPlayers = selectedDefaultPlayers.filter(
+      name => !players.some(p => p.name.toLowerCase() === name.toLowerCase())
+    );
+
+    if (newPlayers.length === 0) {
+      toast.info("All selected players are already in the game");
+      return;
+    }
+
+    // Add the selected default players to the current game
+    const playersToAdd = newPlayers.map(name => ({
+      id: uuidv4(),
+      name,
+      isDefault: true
+    }));
+
+    setPlayers([...players, ...playersToAdd]);
+    setSelectedDefaultPlayers([]);
+    toast.success(`Added ${newPlayers.length} player${newPlayers.length > 1 ? 's' : ''}`);
+  };
+
+  const handleAddDefaultPlayer = (playerName: string) => {
+    // Check if this player is already in the list
+    const existingPlayer = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+
+    if (existingPlayer) {
+      toast.info(`${playerName} is already in the game`);
+      return;
+    }
+
+    // Add the default player to the current game
+    setPlayers([...players, { id: uuidv4(), name: playerName, isDefault: true }]);
   };
 
   const handleStartGame = () => {
     // Validate inputs
+    if (players.length === 0) {
+      toast.error("You need to add at least 2 players");
+      return;
+    }
+
     if (players.some((player) => !player.name.trim())) {
       toast.error("All players must have names");
+      return;
+    }
+
+    if (players.length < 2) {
+      toast.error("You need at least 2 players");
       return;
     }
 
@@ -54,10 +132,27 @@ export default function NewGame() {
       return;
     }
 
-    // Create new game
+    // Add new players to default players list if marked
+    const newDefaultPlayers = [...defaultPlayers];
+    let defaultPlayersChanged = false;
+
+    players.forEach(player => {
+      if (player.isDefault && !defaultPlayers.includes(player.name)) {
+        newDefaultPlayers.push(player.name);
+        defaultPlayersChanged = true;
+      }
+    });
+
+    if (defaultPlayersChanged) {
+      localStorage.setItem('defaultPlayers', JSON.stringify(newDefaultPlayers));
+      setDefaultPlayers(newDefaultPlayers);
+    }
+
+    // Create new game (without the isDefault property)
+    const gamePlayers = players.map(({ id, name }) => ({ id, name }));
     const newGame = {
       id: uuidv4(),
-      players,
+      players: gamePlayers,
       gameType,
       endScore,
       rounds: [],
@@ -99,16 +194,78 @@ export default function NewGame() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="game-type">Game Type</Label>
-              <Select value={gameType} onValueChange={setGameType}>
-                <SelectTrigger id="game-type">
-                  <SelectValue placeholder="Select game type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hearts">Hearts</SelectItem>
-                  <SelectItem value="president">President</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="game-type" className="text-base font-medium">Game Type</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  className={`border rounded-md p-4 text-left transition-all ${
+                    gameType === "hearts"
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-muted hover:border-primary/50"
+                  }`}
+                  onClick={() => setGameType("hearts")}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Heart className="h-5 w-5 text-red-500" />
+                    <span className="font-medium">Hearts</span>
+                    {gameType === "hearts" && (
+                      <Check className="h-4 w-4 ml-auto text-primary" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Classic trick-taking card game where you avoid hearts and the Queen of Spades.
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  className={`border rounded-md p-4 text-left transition-all ${
+                    gameType === "president"
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "border-muted hover:border-primary/50"
+                  }`}
+                  onClick={() => {
+                    console.log("Setting game type to president");
+                    setGameType("president");
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="h-5 w-5 text-yellow-500" />
+                    <span className="font-medium">
+                      {typeof window !== 'undefined' ? localStorage.getItem('presidentAlias') || 'President' : 'President'}
+                    </span>
+                    {gameType === "president" && (
+                      <Check className="h-4 w-4 ml-auto text-primary" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Climbing card game with player ranks from President to Scum.
+                  </p>
+                </button>
+              </div>
+              <div className="sr-only">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="hearts-radio"
+                    name="game-type-radio"
+                    checked={gameType === "hearts"}
+                    onChange={() => setGameType("hearts")}
+                    className="mr-2"
+                  />
+                  <label htmlFor="hearts-radio">Hearts</label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="president-radio"
+                    name="game-type-radio"
+                    checked={gameType === "president"}
+                    onChange={() => setGameType("president")}
+                    className="mr-2"
+                  />
+                  <label htmlFor="president-radio">President</label>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -130,42 +287,131 @@ export default function NewGame() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label>Players</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddPlayer}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Player
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {players.map((player, index) => (
-                  <div key={player.id} className="flex items-center gap-3">
-                    <Input
-                      placeholder={`Player ${index + 1}`}
-                      value={player.name}
-                      onChange={(e) =>
-                        handlePlayerNameChange(player.id, e.target.value)
-                      }
-                    />
+                <div className="flex gap-2">
+                  {defaultPlayers.length > 0 && (
                     <Button
                       type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemovePlayer(player.id)}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowDefaultPlayers(!showDefaultPlayers);
+                        if (!showDefaultPlayers) {
+                          setSelectedDefaultPlayers([]);
+                        }
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Users className="mr-2 h-4 w-4" />
+                      {showDefaultPlayers ? "Hide Default Players" : "Add Default Players"}
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddPlayer}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add Player
+                  </Button>
+                </div>
+              </div>
+
+              {showDefaultPlayers && defaultPlayers.length > 0 && (
+                <div className="p-3 bg-muted rounded-md">
+                  <div className="flex flex-col space-y-2 mb-3">
+                    <h3 className="text-sm font-medium">Default Players</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Select players from the list below, then click "Add to Game" to include them.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {defaultPlayers.map((player) => {
+                      const isAlreadyInGame = players.some(p => p.name.toLowerCase() === player.toLowerCase());
+                      return (
+                        <div
+                          key={player}
+                          className={`flex items-center p-2 rounded-md ${isAlreadyInGame ? 'bg-secondary/30' : 'hover:bg-secondary/10'}`}
+                        >
+                          <Checkbox
+                            id={`select-${player}`}
+                            checked={selectedDefaultPlayers.includes(player)}
+                            onCheckedChange={() => !isAlreadyInGame && handleToggleSelectDefaultPlayer(player)}
+                            disabled={isAlreadyInGame}
+                            className="mr-2"
+                          />
+                          <Label
+                            htmlFor={`select-${player}`}
+                            className={`text-sm flex-1 cursor-pointer ${isAlreadyInGame ? 'text-muted-foreground line-through' : ''}`}
+                          >
+                            {player}
+                          </Label>
+                          {isAlreadyInGame && (
+                            <span className="text-xs text-muted-foreground">Added</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleAddSelectedDefaultPlayers}
+                      disabled={selectedDefaultPlayers.length === 0}
+                      className="w-full sm:w-auto"
+                    >
+                      Add to Game ({selectedDefaultPlayers.length} player{selectedDefaultPlayers.length !== 1 ? 's' : ''})
                     </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
+
+              {players.length === 0 ? (
+                <div className="p-8 border border-dashed rounded-md text-center">
+                  <p className="text-muted-foreground mb-4">No players added yet<br/>Choose from your default players or add a new player to get started.</p>
+
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {players.map((player, index) => (
+                    <div key={player.id} className="flex items-center gap-3">
+                      <Input
+                        placeholder={`Player ${index + 1}`}
+                        value={player.name}
+                        onChange={(e) =>
+                          handlePlayerNameChange(player.id, e.target.value)
+                        }
+                      />
+                      <div className="flex items-center gap-1">
+                        <Checkbox
+                          id={`default-${player.id}`}
+                          checked={player.isDefault}
+                          onCheckedChange={() => handleToggleDefaultPlayer(player.id)}
+                        />
+                        <Label htmlFor={`default-${player.id}`} className="text-xs whitespace-nowrap">
+                          Save as default
+                        </Label>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemovePlayer(player.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
           <CardFooter>
-            <Button onClick={handleStartGame} className="ml-auto gap-2">
+            <Button
+              onClick={handleStartGame}
+              className="ml-auto gap-2"
+              disabled={players.length < 2}
+            >
               Start Game
               <ArrowRight className="h-4 w-4" />
             </Button>
